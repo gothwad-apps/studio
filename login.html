@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gothwad Studio Access</title>
+    
+    <!-- Theme & Icons -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- 🛠 UI FIXES --- */
+        * { box-sizing: border-box; } /* Padding fix */
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--bg-color);
+            padding: 20px;
+            margin: 0;
+            font-family: sans-serif;
+        }
+
+        .auth-card {
+            background: var(--surface-color);
+            width: 100%;
+            max-width: 380px;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+        }
+
+        .brand-header { text-align: center; margin-bottom: 25px; }
+        .brand-header h2 { color: var(--primary); margin: 0; font-size: 22px; font-weight: 700; }
+        .brand-header p { color: var(--text-sub); font-size: 13px; margin-top: 5px; }
+
+        /* Tabs */
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: var(--bg-color);
+            padding: 5px;
+            border-radius: 10px;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            border: none;
+            color: var(--text-sub);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+        .tab-btn.active {
+            background: var(--surface-color);
+            color: var(--primary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* Inputs */
+        .form-section { display: none; }
+        .form-section.active { display: block; animation: fadeIn 0.3s; }
+
+        .input-group { margin-bottom: 15px; position: relative; }
+        .input-label { display: block; color: var(--text-sub); font-size: 12px; margin-bottom: 5px; }
+        
+        .custom-input {
+            width: 100%;
+            padding: 12px;
+            padding-right: 40px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+        }
+        .custom-input:focus { border-color: var(--primary); }
+
+        .eye-toggle {
+            position: absolute; right: 12px; bottom: 12px;
+            color: var(--text-sub); cursor: pointer; padding: 5px;
+        }
+
+        /* Main Buttons */
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .submit-btn:active { transform: scale(0.98); }
+
+        /* Messages */
+        #error-msg {
+            color: #ff4444;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 15px;
+            display: none;
+            background: rgba(255, 0, 0, 0.1);
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="auth-card">
+        <div class="brand-header">
+            <h2 id="page-title">Sign In to Studio</h2>
+            <p>Gothwad Studio & IDE</p>
+        </div>
+        
+        <!-- Tabs -->
+        <div class="auth-tabs">
+            <button class="tab-btn active" onclick="switchTab('signin')" id="tab-in">Sign In</button>
+            <button class="tab-btn" onclick="switchTab('signup')" id="tab-up">Sign Up</button>
+        </div>
+
+        <!-- 1. SIGN IN FORM -->
+        <div id="signin-form" class="form-section active">
+            <div class="input-group">
+                <label class="input-label">Email Address</label>
+                <input type="email" id="login-email" class="custom-input" placeholder="dev@gothwad.com">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Password</label>
+                <input type="password" id="login-pass" class="custom-input" placeholder="••••••••">
+                <i class="fas fa-eye eye-toggle" onclick="togglePass('login-pass', this)"></i>
+            </div>
+            <!-- onclick is back, backed by window function -->
+            <button class="submit-btn" onclick="tryLogin(this)">Login to Studio</button>
+        </div>
+
+        <!-- 2. SIGN UP FORM -->
+        <div id="signup-form" class="form-section">
+            <div class="input-group">
+                <label class="input-label">Full Name</label>
+                <input type="text" id="reg-name" class="custom-input" placeholder="John Doe">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Email</label>
+                <input type="email" id="reg-email" class="custom-input" placeholder="user@example.com">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Password</label>
+                <input type="password" id="reg-pass" class="custom-input" placeholder="Create Password">
+                <i class="fas fa-eye eye-toggle" onclick="togglePass('reg-pass', this)"></i>
+            </div>
+            <div class="input-group">
+                <label class="input-label">Confirm Password</label>
+                <input type="password" id="reg-pass-confirm" class="custom-input" placeholder="Confirm Password">
+                <i class="fas fa-eye eye-toggle" onclick="togglePass('reg-pass-confirm', this)"></i>
+            </div>
+            <!-- onclick is back -->
+            <button class="submit-btn" onclick="trySignUp(this)">Create Account</button>
+        </div>
+
+        <p id="error-msg"></p>
+    </div>
+
+    <!-- LOGIC -->
+    <script type="module">
+        import { auth, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from './firebase-config.js';
+
+        // --- GLOBAL FUNCTIONS (WINDOW SCOPE) ---
+        // Boss, ye sabse zaruri part hai. Isse HTML buttons functions ko dekh payenge.
+
+        window.switchTab = function(tab) {
+            document.getElementById('error-msg').style.display = 'none';
+            if(tab === 'signin') {
+                document.getElementById('signin-form').classList.add('active');
+                document.getElementById('signup-form').classList.remove('active');
+                document.getElementById('tab-in').classList.add('active');
+                document.getElementById('tab-up').classList.remove('active');
+                document.getElementById('page-title').innerText = "Sign In to Studio";
+            } else {
+                document.getElementById('signup-form').classList.add('active');
+                document.getElementById('signin-form').classList.remove('active');
+                document.getElementById('tab-up').classList.add('active');
+                document.getElementById('tab-in').classList.remove('active');
+                document.getElementById('page-title').innerText = "Join Gothwad Studio";
+            }
+        }
+
+        window.togglePass = function(id, icon) {
+            let input = document.getElementById(id);
+            if (input.type === "password") {
+                input.type = "text";
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = "password";
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // --- LOGIN LOGIC ---
+        window.tryLogin = async function(btnElement) {
+            let email = document.getElementById('login-email').value;
+            let pass = document.getElementById('login-pass').value;
+
+            if(!email || !pass) {
+                showError("Please enter email and password.");
+                return;
+            }
+
+            try {
+                let originalText = btnElement.innerText;
+                btnElement.innerText = "Authenticating...";
+                btnElement.style.opacity = "0.7";
+
+                await signInWithEmailAndPassword(auth, email, pass);
+                
+                // Success
+                window.location.href = "home.html";
+            } catch (error) {
+                btnElement.innerText = "Login to Studio";
+                btnElement.style.opacity = "1";
+                console.error(error);
+                showError("Login Failed: Check email or password.");
+            }
+        }
+
+        // --- SIGN UP LOGIC ---
+        window.trySignUp = async function(btnElement) {
+            let name = document.getElementById('reg-name').value;
+            let email = document.getElementById('reg-email').value;
+            let pass = document.getElementById('reg-pass').value;
+            let confirm = document.getElementById('reg-pass-confirm').value;
+
+            if(!name || !email || !pass) {
+                showError("All fields are required.");
+                return;
+            }
+            if(pass !== confirm) {
+                showError("Passwords do not match.");
+                return;
+            }
+            if(pass.length < 6) {
+                showError("Password must be 6+ chars.");
+                return;
+            }
+
+            try {
+                let originalText = btnElement.innerText;
+                btnElement.innerText = "Creating...";
+                btnElement.style.opacity = "0.7";
+
+                const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+                const user = userCredential.user;
+
+                // Name Update
+                await updateProfile(user, { displayName: name });
+
+                alert("Welcome, " + name + "!");
+                window.location.href = "home.html";
+
+            } catch (error) {
+                btnElement.innerText = "Create Account";
+                btnElement.style.opacity = "1";
+                let msg = error.message;
+                if(msg.includes("email-already-in-use")) msg = "Email already used.";
+                showError(msg);
+            }
+        }
+
+        function showError(msg) {
+            let el = document.getElementById('error-msg');
+            el.innerText = msg;
+            el.style.display = 'block';
+        }
+
+        console.log("Gothwad Auth Logic Loaded ✅");
+    </script>
+</body>
+</html>

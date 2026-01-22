@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dashboard - Gothwad Studio</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- 🛠 GLOBAL LAYOUT FIX --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            background-color: var(--bg-color);
+            margin: 0; padding: 0;
+            padding-top: 60px; /* Header */
+            padding-bottom: 70px; /* Nav Height */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* 1. APP BAR */
+        .app-bar {
+            position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+            background: var(--surface-color);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand-title {
+            font-size: 18px; font-weight: 800; color: var(--primary);
+            flex: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        
+        .icon-btn { background: none; border: none; font-size: 20px; color: var(--text-main); padding: 10px; cursor: pointer; }
+
+        /* 2. SIDEBAR */
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 200; opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        .sidebar-overlay.active { opacity: 1; pointer-events: all; }
+
+        .sidebar {
+            position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
+            background: var(--surface-color); z-index: 201;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+        }
+        .sidebar.active { left: 0; }
+
+        .user-header { padding: 30px 20px; background: linear-gradient(135deg, var(--primary), #6200ea); color: #fff; }
+        .avatar-circle { width: 50px; height: 50px; background: #fff; color: var(--primary); border-radius: 50%; font-size: 20px; font-weight: bold; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+        .user-name { font-size: 16px; font-weight: 700; display: block; }
+        .user-email { font-size: 12px; opacity: 0.8; }
+        
+        .menu-list { flex: 1; padding: 10px 0; overflow-y: auto; }
+        .menu-item { padding: 15px 20px; display: flex; align-items: center; color: var(--text-main); font-size: 14px; font-weight: 500; cursor: pointer; }
+        .menu-item i { width: 30px; font-size: 16px; color: var(--text-sub); }
+
+        /* 3. SEARCH & CONTENT */
+        .search-wrapper {
+            background: var(--surface-color); padding: 0 20px 15px 20px;
+            display: none; border-bottom: 1px solid var(--border);
+            width: 100%; animation: slideDown 0.2s ease-out;
+        }
+        .search-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); outline: none; }
+        
+        .container { padding: 20px; width: 100%; }
+        .project-card {
+            background: var(--surface-color); border-radius: 12px; padding: 15px; margin-bottom: 12px;
+            display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid var(--border);
+        }
+        .proj-icon { width: 45px; height: 45px; background: rgba(187, 134, 252, 0.1); color: var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-right: 15px; flex-shrink: 0; }
+        .proj-info { flex: 1; overflow: hidden; }
+        .proj-name { font-size: 15px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .proj-date { font-size: 11px; color: var(--text-sub); }
+        .proj-menu-btn { padding: 10px; color: var(--text-sub); background: none; border: none; }
+
+        .empty-state { text-align: center; margin-top: 60px; display: none; }
+        .empty-icon { font-size: 50px; color: var(--border); margin-bottom: 15px; }
+
+        /* --- 🧭 BOTTOM NAVIGATION (5 Items) --- */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            height: 60px;
+            background: var(--surface-color);
+            display: flex; justify-content: space-around; align-items: center;
+            border-top: 1px solid var(--border);
+            z-index: 95;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--text-sub); text-decoration: none;
+            height: 100%; cursor: pointer;
+        }
+        
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item span { font-size: 10px; font-weight: 500; }
+        
+        .nav-item.active { color: var(--primary); }
+        .nav-item:active { background-color: rgba(0,0,0,0.03); }
+
+        /* --- ➕ FLOATING ACTION BUTTON (Original Position) --- */
+        .fab {
+            position: fixed;
+            bottom: 75px; /* Nav bar (60px) se thoda upar */
+            right: 20px;
+            width: 56px; height: 56px;
+            background: var(--primary);
+            color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            border: none; cursor: pointer; z-index: 90;
+            transition: transform 0.2s;
+        }
+        .fab:active { transform: scale(0.9); }
+
+        @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar-overlay" onclick="toggleMenu()"></div>
+    <div class="sidebar">
+        <div class="user-header">
+            <div class="avatar-circle" id="user-avatar">?</div>
+            <span class="user-name" id="user-name">Loading...</span>
+            <span class="user-email" id="user-email">wait...</span>
+        </div>
+        <div class="menu-list">
+            <div class="menu-item" onclick="toggleMenu()"><i class="fas fa-home"></i> Home</div>
+            <div class="menu-item" onclick="location.href='profile.html'"><i class="fas fa-user"></i> Profile</div>
+            <div class="menu-item" onclick="location.href='settings.html'"><i class="fas fa-cog"></i> Settings</div>
+            <hr style="border:0; border-top:1px solid var(--border); margin:5px 0;">
+            <div class="menu-item" onclick="location.href='bug.html'"><i class="fas fa-bug" style="color:#ffa726"></i> Report Bug</div>
+            <div class="menu-item" onclick="location.href='feedback.html'"><i class="fas fa-comment-alt" style="color:#29b6f6"></i> Feedback</div>
+            <div style="flex:1"></div>
+            <div class="menu-item" onclick="handleLogout()" style="color:#ff4444;"><i class="fas fa-sign-out-alt"></i> Log Out</div>
+        </div>
+    </div>
+
+    <!-- APP BAR -->
+    <header class="app-bar">
+        <button class="icon-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+        <div class="brand-title">Gothwad Studio</div>
+        <button class="icon-btn" onclick="toggleSearch()"><i class="fas fa-search"></i></button>
+    </header>
+
+    <!-- SEARCH BAR -->
+    <div class="search-wrapper" id="search-box">
+        <input type="text" id="search-input" class="search-input" placeholder="Search projects..." onkeyup="filterProjects()">
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+        <div class="section-title">YOUR PROJECTS</div>
+        <div id="project-list"></div>
+        <div class="empty-state" id="empty-box">
+            <i class="fas fa-folder-open empty-icon"></i>
+            <p style="color:var(--text-sub); font-size:14px;">No projects found.<br>Tap (+) to create one.</p>
+        </div>
+    </div>
+
+    <!-- 🧭 5-TAB NAVIGATION -->
+    <nav class="bottom-nav">
+        <!-- 1. Home -->
+        <a href="#" class="nav-item active">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+
+        <!-- 2. Explore (Wapas aa gaya) -->
+        <a href="explore.html" class="nav-item">
+            <i class="fas fa-compass"></i>
+            <span>Explore</span>
+        </a>
+
+        <!-- 3. Global Chat -->
+        <a href="globalchat.html" class="nav-item">
+            <i class="fas fa-users"></i>
+            <span>Global</span>
+        </a>
+
+        <!-- 4. DM / Chat -->
+        <a href="chat.html" class="nav-item">
+            <i class="fas fa-comment-dots"></i>
+            <span>DM</span>
+        </a>
+
+        <!-- 5. AI -->
+        <a href="aichat.html" class="nav-item">
+            <i class="fas fa-robot"></i>
+            <span>AI</span>
+        </a>
+    </nav>
+
+    <!-- ➕ FLOATING BUTTON (Apni purani jagah par) -->
+    <button class="fab" onclick="goToCreate()">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- LOGIC -->
+    <script type="module">
+        import { auth, signOut, onAuthStateChanged } from './firebase-config.js';
+
+        // --- GLOBAL WINDOW FUNCTIONS ---
+        window.toggleMenu = function() {
+            document.querySelector('.sidebar').classList.toggle('active');
+            document.querySelector('.sidebar-overlay').classList.toggle('active');
+        }
+
+        window.toggleSearch = function() {
+            let box = document.getElementById('search-box');
+            let input = document.getElementById('search-input');
+            if(box.style.display === 'block') {
+                box.style.display = 'none'; input.value = ''; window.renderProjects(); 
+            } else {
+                box.style.display = 'block'; input.focus();
+            }
+        }
+
+        window.goToCreate = function() {
+            window.location.href = "createproject.html";
+        }
+
+        window.handleLogout = async function() {
+            if(confirm("Log out of Studio?")) {
+                await signOut(auth);
+                window.location.href = "login.html";
+            }
+        }
+
+        window.openProject = function(id) {
+            window.location.href = "filemanager.html?id=" + id;
+        }
+
+        window.deleteProject = function(id, event) {
+            event.stopPropagation();
+            if(confirm("Delete this project?")) {
+                let projects = JSON.parse(localStorage.getItem('gothwad_projects')) || [];
+                projects = projects.filter(p => p.id !== id);
+                localStorage.setItem('gothwad_projects', JSON.stringify(projects));
+                renderProjects();
+            }
+        }
+
+        // --- FILTER ---
+        window.filterProjects = function() {
+            let query = document.getElementById('search-input').value.toLowerCase();
+            let cards = document.querySelectorAll('.project-card');
+            let hasVisible = false;
+
+            cards.forEach(card => {
+                let name = card.querySelector('.proj-name').innerText.toLowerCase();
+                if(name.includes(query)) {
+                    card.style.display = "flex"; hasVisible = true;
+                } else {
+                    card.style.display = "none";
+                }
+            });
+
+            let empty = document.getElementById('empty-box');
+            empty.style.display = (!hasVisible && query.length > 0) ? 'block' : 'none';
+            if(!hasVisible && query.length === 0) renderProjects();
+        }
+
+        // --- INTERNAL LOGIC ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try { await user.reload(); user = auth.currentUser; } catch(e) {}
+                document.getElementById('user-name').innerText = user.displayName || "Developer";
+                document.getElementById('user-email').innerText = user.email;
+                document.getElementById('user-avatar').innerText = (user.displayName || "U").charAt(0).toUpperCase();
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        window.renderProjects = function() {
+            let projects = JSON.parse(localStorage.getItem('gothwad_projects')) || [];
+            let list = document.getElementById('project-list');
+            let empty = document.getElementById('empty-box');
+
+            list.innerHTML = "";
+            if(projects.length === 0) { empty.style.display = "block"; return; }
+            empty.style.display = "none";
+
+            projects.reverse().forEach(p => {
+                let date = new Date(p.date).toLocaleDateString();
+                let div = document.createElement('div');
+                div.className = 'project-card';
+                div.onclick = () => window.openProject(p.id);
+                div.innerHTML = `
+                    <div class="proj-icon"><i class="fas fa-code"></i></div>
+                    <div class="proj-info">
+                        <div class="proj-name">${p.name}</div>
+                        <div class="proj-date">Created: ${date}</div>
+                    </div>
+                    <button class="proj-menu-btn" onclick="window.deleteProject(${p.id}, event)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                `;
+                list.appendChild(div);
+            });
+        }
+        renderProjects();
+    </script>
+</body>
+</html>

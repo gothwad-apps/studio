@@ -1,0 +1,135 @@
+/* --- 📱 GOTHWAD MASTER STYLE (ANDROID NATIVE LOOK) --- */
+
+:root {
+    /* 1. DEFAULT THEME (Android Light) */
+    --bg-color: #f5f5f5;         /* Light Gray Background */
+    --surface-color: #ffffff;    /* Pure White for Cards/Header */
+    --text-main: #212121;        /* Almost Black Text */
+    --text-sub: #757575;         /* Grey Text for hints */
+    --primary: #6200ee;          /* Android Purple/Blue */
+    --border: #e0e0e0;           /* Subtle Light Borders */
+    --shadow: 0 1px 3px rgba(0,0,0,0.12); /* Android Elevation */
+    --font-size: 13px;           /* Chota Font (Compact) */
+}
+
+/* 2. DARK MODE (Night) */
+body.theme-dark {
+    --bg-color: #121212;
+    --surface-color: #1e1e1e;
+    --text-main: #e0e0e0;
+    --text-sub: #aaaaaa;
+    --primary: #bb86fc;          /* Neon Purple */
+    --border: #333333;
+    --shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+/* 3. MINT THEME (Light Green) */
+body.theme-mint {
+    --primary: #00c853;          /* Material Green */
+}
+
+/* 4. OCEAN THEME (Sky Blue) */
+body.theme-ocean {
+    --primary: #0091ea;          /* Light Blue */
+}
+
+/* 5. SUNSET THEME (Warm Orange) */
+body.theme-sunset {
+    --primary: #ff6d00;          /* Deep Orange */
+}
+
+/* --- 🛠 GLOBAL STYLES (DO NOT TOUCH) --- */
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; /* Native System Font */
+    font-size: var(--font-size);
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Header / App Bar */
+.app-bar {
+    background-color: var(--surface-color);
+    color: var(--text-main);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.app-bar h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary); /* Title takes theme color */
+}
+
+/* Cards (Project List Items) */
+.card {
+    background-color: var(--surface-color);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    transition: transform 0.1s;
+}
+
+.card:active {
+    transform: scale(0.98); /* Touch Effect */
+}
+
+/* Buttons (Material Style) */
+.btn {
+    background-color: var(--primary);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    cursor: pointer;
+}
+
+.btn-icon {
+    background: transparent;
+    color: var(--text-main);
+    border: none;
+    font-size: 20px;
+    padding: 5px;
+    box-shadow: none;
+}
+
+/* Floating Action Button (+) */
+.fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    background-color: var(--primary);
+    color: white;
+    border-radius: 50%;
+    border: none;
+    font-size: 24px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+.fab:active { opacity: 0.9; }
+
+/* Small Text Helpers */
+.text-small { font-size: 11px; color: var(--text-sub); }

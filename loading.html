@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gothwad Studio</title>
+    
+    <!-- 1. Theme Style (Isse Colors aayenge) -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- 2. Anti-Flash Script (Page load hone se pehle theme set karega) -->
+    <script>
+        let savedTheme = localStorage.getItem('gothwad_theme');
+        if(savedTheme) {
+            document.documentElement.className = savedTheme;
+            document.body.className = savedTheme;
+        }
+    </script>
+
+    <style>
+        /* --- 🎨 THEME ADAPTIVE DESIGN --- */
+        body {
+            margin: 0;
+            padding: 0;
+            /* Yaha Hardcoded Black nahi, Theme Variable use hoga */
+            background-color: var(--bg-color); 
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* CENTER CONTENT */
+        .splash-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        /* LOGO BOX */
+        .logo-box {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            /* Drop shadow taaki white theme pe bhi logo dikhe */
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.15)); 
+            animation: bounce 2s infinite ease-in-out;
+        }
+
+        /* APP TITLE */
+        .app-title {
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            /* Text Color Theme se lega */
+            color: var(--text-main); 
+            margin-bottom: 5px;
+        }
+
+        .tagline {
+            font-size: 12px;
+            color: var(--text-sub);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+        }
+
+        /* PROGRESS BAR */
+        .loader-track {
+            width: 150px;
+            height: 4px;
+            background: rgba(128, 128, 128, 0.2); /* Subtle Grey Track */
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .loader-fill {
+            height: 100%;
+            width: 0%;
+            /* Bar ka color Theme ka Primary Color hoga (Purple/Blue/Green) */
+            background-color: var(--primary); 
+            border-radius: 10px;
+            transition: width 0.1s linear;
+        }
+
+        .percent-text {
+            margin-top: 10px;
+            font-size: 12px;
+            font-family: monospace;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        /* FOOTER BRANDING */
+        .footer {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .from-text {
+            font-size: 10px;
+            color: var(--text-sub);
+        }
+
+        .company-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        /* Dot bhi theme color lega */
+        .company-dot {
+            width: 6px; height: 6px;
+            background-color: var(--primary);
+            border-radius: 50%;
+        }
+
+        /* Animation */
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+    </style>
+</head>
+<body class="theme-default">
+
+    <div class="splash-content">
+        <!-- Logo -->
+        <div class="logo-box">
+            <img src="logo.png" class="logo-img" alt="Gothwad" onerror="this.src='https://cdn-icons-png.flaticon.com/512/5968/5968292.png'">
+        </div>
+
+        <div class="app-title">Gothwad Studio</div>
+        <div class="tagline">Mobile IDE & Compiler</div>
+
+        <!-- Loader -->
+        <div class="loader-track">
+            <div class="loader-fill" id="bar"></div>
+        </div>
+        <div class="percent-text" id="percent">0%</div>
+    </div>
+
+    <!-- Branding -->
+    <div class="footer">
+        <div class="from-text">from</div>
+        <div class="company-name">
+            <span class="company-dot"></span>
+            Gothwad Apps Pvt. Ltd.
+        </div>
+    </div>
+
+    <!-- SCRIPT 1: Animation Logic (0-100%) -->
+    <script>
+        const bar = document.getElementById('bar');
+        const percent = document.getElementById('percent');
+        
+        let progress = 0;
+        window.targetUrl = null; // Store destination here
+
+        // Timer: 30ms * 100 = 3 Seconds
+        const timer = setInterval(() => {
+            progress++;
+            bar.style.width = progress + "%";
+            percent.innerText = progress + "%";
+
+            if(progress >= 100) {
+                clearInterval(timer);
+                percent.innerText = "Ready!";
+                checkRedirect();
+            }
+        }, 30);
+
+        function checkRedirect() {
+            // Check if Firebase gave a result
+            if(window.targetUrl) {
+                window.location.href = window.targetUrl;
+            } else {
+                percent.innerText = "Connecting...";
+                // Wait loop
+                let wait = setInterval(() => {
+                    if(window.targetUrl) {
+                        clearInterval(wait);
+                        window.location.href = window.targetUrl;
+                    }
+                }, 200);
+            }
+        }
+    </script>
+
+    <!-- SCRIPT 2: Firebase Check (Background) -->
+    <script type="module">
+        import { auth, onAuthStateChanged } from './firebase-config.js';
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Logged In -> Home
+                window.targetUrl = 'home.html';
+            } else {
+                // Not Logged In -> Login
+                window.targetUrl = 'login.html';
+            }
+        });
+
+        // Safety timeout (5 sec)
+        setTimeout(() => { if(!window.targetUrl) window.targetUrl = 'login.html'; }, 5000);
+    </script>
+
+</body>
+</html>
