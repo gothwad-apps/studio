@@ -3,18 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Direct Messages - GX Studio</title>
+    <title>Chats - Gothwad Studio</title>
     
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* --- LAYOUT --- */
+        /* --- 🛠 GLOBAL FIX (Jo cheezein bahar ja rahi thi unhe rokega) --- */
+        * {
+            box-sizing: border-box; 
+        }
+
         body {
             background-color: var(--bg-color);
             margin: 0; padding: 0;
-            padding-top: 60px; /* Header */
-            padding-bottom: 70px; /* Nav */
+            padding-top: 60px; /* Header Height */
+            padding-bottom: 70px; /* Nav Height */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             overflow-x: hidden;
         }
@@ -24,62 +28,100 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 60px;
             background: var(--surface-color);
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 15px;
+            padding: 0 15px; /* Safe padding from sides */
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             z-index: 100;
             border-bottom: 1px solid var(--border);
         }
-        .page-title { font-size: 18px; font-weight: 800; color: var(--primary); }
-        .icon-btn { background: none; border: none; font-size: 18px; color: var(--text-main); cursor: pointer; }
 
-        /* SEARCH */
-        .search-container {
-            padding: 15px;
-            background: var(--surface-color);
-            border-bottom: 1px solid var(--border);
+        .page-title { 
+            font-size: 18px; /* Thoda chota kiya taaki "Developer Chats" fit aaye */
+            font-weight: 800; 
+            color: var(--text-main);
+            white-space: nowrap; 
         }
+        
+        /* Settings Icon */
+        .icon-btn { 
+            background: none; border: none; font-size: 20px; 
+            color: var(--text-main); cursor: pointer; padding: 8px; 
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* SEARCH BAR (Fixed Width) */
+        .search-box-container {
+            width: 100%;
+            padding: 15px; /* Charo taraf barabar jagah */
+            background: var(--bg-color);
+        }
+
         .search-bar {
-            width: 100%; padding: 10px 15px; border-radius: 20px;
-            border: 1px solid var(--border); background: var(--bg-color);
-            color: var(--text-main); font-size: 14px; outline: none;
-        }
-
-        /* USER LIST */
-        .user-list {
-            padding: 10px;
-        }
-
-        .user-card {
+            width: 100%; /* Container ke andar fit hoga */
+            padding: 12px 15px; 
+            border-radius: 25px;
+            border: 1px solid var(--border); 
             background: var(--surface-color);
-            padding: 12px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            border: 1px solid var(--border);
-            transition: transform 0.1s;
-            cursor: pointer;
+            color: var(--text-main); 
+            font-size: 14px; 
+            outline: none;
+            display: flex; align-items: center; gap: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05); /* Thoda utha hua dikhega */
         }
-        .user-card:active { transform: scale(0.98); background-color: rgba(0,0,0,0.02); }
+
+        .search-input {
+            border: none; background: transparent; 
+            flex: 1; outline: none; 
+            color: var(--text-main);
+            font-size: 14px;
+        }
+
+        /* RECENT LIST */
+        .chat-list { padding: 0; width: 100%; }
+
+        .chat-item {
+            display: flex; align-items: center;
+            padding: 15px;
+            background: var(--bg-color);
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+        }
+        .chat-item:active { background: var(--surface-color); }
 
         .avatar {
-            width: 45px; height: 45px;
-            border-radius: 50%;
-            background: #e0e0e0;
-            color: #555;
+            width: 50px; height: 50px; border-radius: 50%;
+            background: #e0e0e0; color: #555;
             display: flex; align-items: center; justify-content: center;
-            font-size: 18px; font-weight: bold;
-            margin-right: 15px;
+            font-size: 18px; font-weight: bold; margin-right: 15px;
+            flex-shrink: 0; /* Avatar chipkega nahi */
+        }
+        
+        .chat-info { flex: 1; overflow: hidden; }
+        
+        .chat-top { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .user-name { font-size: 16px; font-weight: 600; color: var(--text-main); }
+        .msg-time { font-size: 11px; color: var(--text-sub); }
+
+        .last-msg { 
+            font-size: 13px; color: var(--text-sub); 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
         }
 
-        .user-info { flex: 1; }
-        .user-name { font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 2px; }
-        .user-email { font-size: 12px; color: var(--text-sub); }
-        
-        .chat-icon { color: var(--primary); font-size: 18px; padding: 10px; }
+        /* FAB (+) */
+        .fab-add {
+            position: fixed; bottom: 80px; right: 20px;
+            width: 55px; height: 55px;
+            background: var(--primary); color: #fff;
+            border-radius: 50%; border: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            font-size: 24px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            z-index: 90;
+        }
 
-        /* LOADING */
-        .loading { text-align: center; margin-top: 50px; color: var(--text-sub); font-size: 14px; }
+        /* STATUS MSG */
+        .status-msg { text-align: center; margin-top: 50px; color: var(--text-sub); font-size: 14px; }
 
         /* NAV */
         .bottom-nav {
@@ -88,147 +130,132 @@
             display: flex; justify-content: space-around; align-items: center;
             border-top: 1px solid var(--border); z-index: 95;
         }
-        .nav-item {
-            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: var(--text-sub); text-decoration: none; height: 100%;
-        }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-sub); text-decoration: none; height: 100%; }
         .nav-item i { font-size: 20px; margin-bottom: 4px; }
         .nav-item span { font-size: 10px; font-weight: 500; }
         .nav-item.active { color: var(--primary); }
+
     </style>
 </head>
 <body>
 
     <!-- HEADER -->
     <header class="app-bar">
-        <div class="page-title">Direct Messages</div>
-        <button class="icon-btn" onclick="loadUsers()"><i class="fas fa-sync-alt"></i></button>
+        <div class="page-title">Developer Chats</div>
+        <!-- Settings Button -->
+        <button class="icon-btn" onclick="window.location.href='chatsettings.html'">
+            <i class="fas fa-cog"></i>
+        </button>
     </header>
 
     <!-- SEARCH -->
-    <div class="search-container">
-        <input type="text" id="searchInput" class="search-bar" placeholder="Search developer by name..." onkeyup="filterUsers()">
+    <div class="search-box-container">
+        <div class="search-bar">
+            <i class="fas fa-search" style="color:var(--text-sub)"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search developers..." onkeyup="filterChats()">
+        </div>
     </div>
 
-    <!-- USERS LIST -->
-    <div class="user-list" id="userList">
-        <div class="loading"><i class="fas fa-circle-notch fa-spin"></i> Finding developers...</div>
+    <!-- RECENT CHAT LIST -->
+    <div class="chat-list" id="recentList">
+        <div class="status-msg"><i class="fas fa-circle-notch fa-spin"></i> Loading...</div>
     </div>
+
+    <!-- ADD NEW CHAT BUTTON -->
+    <button class="fab-add" onclick="window.location.href='newchat.html'">
+        <i class="fas fa-comment-medical"></i>
+    </button>
 
     <!-- BOTTOM NAV -->
     <nav class="bottom-nav">
-        <a href="home.html" class="nav-item">
-            <i class="fas fa-home"></i>
-            <span>Home</span>
-        </a>
-        <a href="explore.html" class="nav-item">
-            <i class="fas fa-compass"></i>
-            <span>Explore</span>
-        </a>
-        <a href="globalchat.html" class="nav-item">
-            <i class="fas fa-users"></i>
-            <span>Global</span>
-        </a>
-        <a href="#" class="nav-item active"> <!-- Active -->
-            <i class="fas fa-comment-dots"></i>
-            <span>DM</span>
-        </a>
-        <a href="aichat.html" class="nav-item">
-            <i class="fas fa-robot"></i>
-            <span>AI</span>
-        </a>
+        <a href="home.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="explore.html" class="nav-item"><i class="fas fa-compass"></i><span>Explore</span></a>
+        <a href="globalchat.html" class="nav-item"><i class="fas fa-users"></i><span>Global</span></a>
+        <a href="#" class="nav-item active"><i class="fas fa-comment-dots"></i><span>DM</span></a>
+        <a href="aichat.html" class="nav-item"><i class="fas fa-robot"></i><span>AI</span></a>
     </nav>
 
-    <!-- FIREBASE LOGIC -->
+    <!-- LOGIC -->
     <script type="module">
-        import { auth, db, collection, getDocs, setDoc, doc, serverTimestamp } from './firebase-config.js';
+        import { auth, db, collection, query, orderBy, onSnapshot } from './firebase-config.js';
 
-        const list = document.getElementById('userList');
-        let currentUser = null;
-        let allUsers = [];
+        const list = document.getElementById('recentList');
+        let allChats = [];
 
-        auth.onAuthStateChanged(async (user) => {
+        auth.onAuthStateChanged((user) => {
             if (user) {
-                currentUser = user;
-                // 1. Khud ko list me add karo (Taaki dusre tumhe dekh sake)
-                await registerSelf(user);
-                // 2. Baaki logo ko load karo
-                loadUsers();
+                loadRecentChats(user.uid);
             } else {
                 window.location.href = 'login.html';
             }
         });
 
-        // --- 1. Register Self in 'users' collection ---
-        async function registerSelf(user) {
-            try {
-                let name = user.displayName;
-                if(!name && user.email) name = user.email.split('@')[0];
-                
-                // Users collection me data update karo
-                await setDoc(doc(db, "users", user.uid), {
-                    name: name,
-                    email: user.email,
-                    lastActive: serverTimestamp(),
-                    uid: user.uid
-                }, { merge: true });
-            } catch(e) {
-                console.error("Directory Error:", e);
-            }
-        }
+        function loadRecentChats(myUid) {
+            // Note: Data tabhi aayega jab mainchat.html se msg bhejoge
+            const chatRef = collection(db, "users", myUid, "recent_chats");
+            const q = query(chatRef, orderBy("timestamp", "desc"));
 
-        // --- 2. Load All Users ---
-        window.loadUsers = async function() {
-            try {
-                const querySnapshot = await getDocs(collection(db, "users"));
-                allUsers = [];
-                
-                querySnapshot.forEach((doc) => {
+            onSnapshot(q, (snapshot) => {
+                allChats = [];
+                snapshot.forEach(doc => {
                     let data = doc.data();
-                    // Khud ko list me mat dikhao
-                    if (data.uid !== currentUser.uid) {
-                        allUsers.push(data);
-                    }
+                    data.id = doc.id; 
+                    allChats.push(data);
                 });
-
-                renderUsers(allUsers);
-            } catch (e) {
-                console.error(e);
-                list.innerHTML = `<div class="loading" style="color:red">Failed to load users.</div>`;
-            }
+                renderChats(allChats);
+            }, (error) => {
+                list.innerHTML = `<div class="status-msg">Tap (+) to find developers</div>`;
+            });
         }
 
-        // --- 3. Render List ---
-        function renderUsers(users) {
+        window.renderChats = function(chats) {
             list.innerHTML = "";
-            if(users.length === 0) {
-                list.innerHTML = `<div class="loading">No other users found yet.<br>Invite friends to GX Studio!</div>`;
+            if (chats.length === 0) {
+                list.innerHTML = `<div class="status-msg">No conversations yet.<br>Tap (+) to start chatting.</div>`;
                 return;
             }
 
-            users.forEach(u => {
-                let initial = u.name ? u.name.charAt(0).toUpperCase() : "U";
-                
+            chats.forEach(chat => {
+                let initial = chat.name ? chat.name.charAt(0).toUpperCase() : "U";
+                let timeDisplay = "";
+                if(chat.timestamp) {
+                    let date = chat.timestamp.toDate();
+                    let now = new Date();
+                    timeDisplay = date.toDateString() === now.toDateString() 
+                        ? date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+                        : date.toLocaleDateString();
+                }
+
                 let div = document.createElement('div');
-                div.className = 'user-card';
-                // Click karne par Chat Window khulegi (Query Param ke sath)
+                div.className = 'chat-item';
                 div.onclick = () => {
-                    window.location.href = `dm_window.html?uid=${u.uid}&name=${encodeURIComponent(u.name)}`;
+                    window.location.href = `mainchat.html?uid=${chat.id}&name=${encodeURIComponent(chat.name)}`;
                 };
 
                 div.innerHTML = `
                     <div class="avatar" style="background:${getColor(initial)}">${initial}</div>
-                    <div class="user-info">
-                        <div class="user-name">${u.name}</div>
-                        <div class="user-email">${u.email}</div>
+                    <div class="chat-info">
+                        <div class="chat-top">
+                            <span class="user-name">${chat.name}</span>
+                            <span class="msg-time">${timeDisplay}</span>
+                        </div>
+                        <div class="last-msg">${chat.lastMessage || "Start a conversation"}</div>
                     </div>
-                    <i class="fas fa-chevron-right chat-icon"></i>
                 `;
                 list.appendChild(div);
             });
         }
 
-        // --- 4. Search Filter ---
-        window.filterUsers = function() {
+        window.filterChats = function() {
             let q = document.getElementById('searchInput').value.toLowerCase();
-            let filtered = allUser
+            let filtered = allChats.filter(c => c.name.toLowerCase().includes(q));
+            renderChats(filtered);
+        }
+
+        function getColor(letter) {
+            const colors = ['#FFCDD2', '#F8BBD0', '#E1BEE7', '#D1C4E9', '#C5CAE9', '#BBDEFB'];
+            return colors[letter.charCodeAt(0) % colors.length];
+        }
+    </script>
+</body>
+</html>
