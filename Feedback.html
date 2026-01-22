@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Feedback - Gothwad Studio</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        let savedTheme = localStorage.getItem('gothwad_theme');
+        if(savedTheme) {
+            document.documentElement.className = savedTheme;
+            document.body.className = savedTheme;
+        }
+    </script>
+
+    <style>
+        /* --- 🛠 GLOBAL STYLES --- */
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-color);
+            margin: 0; padding: 0;
+            padding-top: 60px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* HEADER (Fixed & Aligned) */
+        .app-bar {
+            position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+            background: var(--surface-color);
+            display: flex; align-items: center; justify-content: flex-start;
+            gap: 10px; padding: 0 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .icon-btn { 
+            background: none; border: none; font-size: 20px; 
+            color: var(--text-main); cursor: pointer; padding: 8px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .page-title { 
+            font-size: 18px; font-weight: 700; color: var(--primary); 
+            margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        /* CONTAINER */
+        .container {
+            padding: 15px; width: 100%; max-width: 100%;
+        }
+
+        /* BANNER CARD */
+        .banner-card {
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .banner-icon { font-size: 40px; color: var(--primary); margin-bottom: 10px; }
+        .banner-text { font-size: 14px; color: var(--text-sub); line-height: 1.4; }
+
+        /* ⭐ STAR RATING SYSTEM ⭐ */
+        .rating-box {
+            display: flex; justify-content: center; gap: 10px;
+            margin-bottom: 25px;
+        }
+        .star-icon {
+            font-size: 35px;
+            color: var(--border); /* Default Grey */
+            cursor: pointer;
+            transition: transform 0.2s, color 0.2s;
+        }
+        .star-icon.active {
+            color: #FFD700; /* Gold Color */
+        }
+        .star-icon:active { transform: scale(1.2); }
+
+        /* INPUTS */
+        .form-group { margin-bottom: 15px; }
+        .label {
+            display: block; font-size: 12px; font-weight: 600;
+            color: var(--text-main); margin-bottom: 6px; opacity: 0.8;
+        }
+
+        .input-field {
+            width: 100%; padding: 14px; border-radius: 10px;
+            border: 1px solid var(--border); background: var(--surface-color);
+            color: var(--text-main); font-size: 14px; outline: none;
+            transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+        }
+        .input-field:focus { 
+            border-color: var(--primary); 
+            box-shadow: 0 0 0 2px rgba(98, 0, 238, 0.1);
+        }
+        
+        select.input-field {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23757575%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px top 50%;
+            background-size: 10px auto;
+        }
+
+        textarea.input-field { resize: none; min-height: 120px; line-height: 1.5; }
+
+        /* BUTTON */
+        .submit-btn {
+            width: 100%; padding: 15px; background: var(--primary);
+            color: #fff; border: none; border-radius: 12px;
+            font-size: 16px; font-weight: 600; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(98, 0, 238, 0.3);
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            margin-top: 10px;
+        }
+        .submit-btn:active { transform: scale(0.98); }
+
+        /* SUCCESS SCREEN */
+        .success-box {
+            display: none; text-align: center; padding: 40px 20px;
+            background: var(--surface-color); border-radius: 12px;
+            margin-top: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .success-icon { font-size: 50px; color: #00e676; margin-bottom: 15px; }
+
+    </style>
+</head>
+<body>
+
+    <!-- HEADER (Direct Home Redirect) -->
+    <header class="app-bar">
+        <!-- Back Button sidha Home pe jayega -->
+        <button class="icon-btn" onclick="window.location.href='home.html'">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="page-title">Send Feedback</div>
+    </header>
+
+    <!-- FORM -->
+    <div class="container" id="formContainer">
+        
+        <div class="banner-card">
+            <i class="fas fa-heart banner-icon"></i>
+            <div class="banner-text">
+                Enjoying <strong>Gothwad Studio</strong>?<br>
+                Rate your experience and let us know what we can improve.
+            </div>
+        </div>
+
+        <!-- 1. Star Rating -->
+        <div class="label" style="text-align:center; margin-bottom:10px;">TAP TO RATE</div>
+        <div class="rating-box">
+            <i class="fas fa-star star-icon" onclick="setRating(1)"></i>
+            <i class="fas fa-star star-icon" onclick="setRating(2)"></i>
+            <i class="fas fa-star star-icon" onclick="setRating(3)"></i>
+            <i class="fas fa-star star-icon" onclick="setRating(4)"></i>
+            <i class="fas fa-star star-icon" onclick="setRating(5)"></i>
+        </div>
+
+        <!-- 2. Category -->
+        <div class="form-group">
+            <label class="label">Feedback Type</label>
+            <select id="feedType" class="input-field">
+                <option value="Suggestion">💡 Feature Suggestion</option>
+                <option value="Appreciation" selected>❤️ Appreciation</option>
+                <option value="UI/UX">🎨 Design / Theme</option>
+                <option value="Other">📝 Other</option>
+            </select>
+        </div>
+
+        <!-- 3. Message -->
+        <div class="form-group">
+            <label class="label">Your Message</label>
+            <textarea id="feedMsg" class="input-field" placeholder="Tell us what you think..."></textarea>
+        </div>
+
+        <button class="submit-btn" id="submitBtn" onclick="submitFeedback()">
+            Submit Feedback <i class="fas fa-paper-plane"></i>
+        </button>
+
+        <div style="height: 50px;"></div>
+    </div>
+
+    <!-- SUCCESS SCREEN -->
+    <div class="container" id="successScreen">
+        <div class="success-box">
+            <i class="fas fa-check-circle success-icon"></i>
+            <h2 style="color:var(--text-main); margin:0 0 10px 0;">Thank You!</h2>
+            <p style="color:var(--text-sub); font-size:14px; margin-bottom:20px;">
+                Your feedback helps us make Gothwad Studio better for everyone.
+            </p>
+            <button class="submit-btn" onclick="window.location.href='home.html'" style="background:var(--bg-color); color:var(--text-main); border:1px solid var(--border); box-shadow:none;">
+                Back to Home
+            </button>
+        </div>
+    </div>
+
+    <!-- LOGIC -->
+    <script type="module">
+        import { auth, db, collection, addDoc, serverTimestamp } from './firebase-config.js';
+
+        let currentUser = null;
+        let selectedRating = 0;
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        // Star Rating Logic
+        window.setRating = function(n) {
+            selectedRating = n;
+            let stars = document.querySelectorAll('.star-icon');
+            stars.forEach((star, index) => {
+                if(index < n) {
+                    star.classList.add('active'); // Gold
+                } else {
+                    star.classList.remove('active'); // Grey
+                }
+            });
+        }
+
+        window.submitFeedback = async function() {
+            const type = document.getElementById('feedType').value;
+            const msg = document.getElementById('feedMsg').value.trim();
+            const btn = document.getElementById('submitBtn');
+
+            if (selectedRating === 0) {
+                alert("Please select a Star Rating.");
+                return;
+            }
+            if (!msg) {
+                alert("Please write a short message.");
+                return;
+            }
+
+            // Loading State
+            btn.innerHTML = 'Submitting...';
+            btn.style.opacity = "0.7";
+            btn.disabled = true;
+
+            try {
+                const userEmail = currentUser.email || "Anonymous";
+
+                // Add to 'feedback' collection
+                await addDoc(collection(db, "feedback"), {
+                    rating: selectedRating,
+                    category: type,
+                    message: msg,
+                    userEmail: userEmail,
+                    uid: currentUser.uid,
+                    timestamp: serverTimestamp()
+                });
+
+                // Show Success
+                document.getElementById('formContainer').style.display = 'none';
+                document.getElementById('successScreen').style.display = 'block';
+
+            } catch (e) {
+                console.error("Error:", e);
+                alert("Failed to send. Check internet connection.");
+                btn.innerHTML = 'Submit Feedback <i class="fas fa-paper-plane"></i>';
+                btn.style.opacity = "1";
+                btn.disabled = false;
+            }
+        }
+    </script>
+
+</body>
+</html>

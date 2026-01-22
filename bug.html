@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Report Bug - Gothwad Studio</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        let savedTheme = localStorage.getItem('gothwad_theme');
+        if(savedTheme) {
+            document.documentElement.className = savedTheme;
+            document.body.className = savedTheme;
+        }
+    </script>
+
+    <style>
+        /* --- 🛠 GLOBAL FIXES --- */
+        * { box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-color);
+            margin: 0; padding: 0;
+            padding-top: 60px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* HEADER (Fixed Alignment) */
+        .app-bar {
+            position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+            background: var(--surface-color);
+            display: flex; 
+            align-items: center; 
+            justify-content: flex-start; /* 👈 Ye text ko left me rakhega */
+            gap: 10px; /* 👈 Arrow aur Text ke beech thoda gap */
+            padding: 0 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .icon-btn { 
+            background: none; border: none; font-size: 20px; 
+            color: var(--text-main); cursor: pointer; padding: 8px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        .page-title { 
+            font-size: 18px; font-weight: 700; color: var(--primary); 
+            margin: 0; /* Extra margin hata diya */
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+
+        /* CONTAINER */
+        .container {
+            padding: 15px; width: 100%; max-width: 100%;
+        }
+
+        /* INFO CARD */
+        .info-card {
+            background: rgba(98, 0, 238, 0.05);
+            border: 1px solid rgba(98, 0, 238, 0.2);
+            padding: 15px; border-radius: 8px; margin-bottom: 20px;
+            font-size: 13px; color: var(--text-sub);
+            display: flex; gap: 10px; align-items: start;
+        }
+        .info-card i { color: var(--primary); margin-top: 2px; }
+
+        /* INPUTS */
+        .form-group { margin-bottom: 15px; }
+        
+        .label {
+            display: block; font-size: 12px; font-weight: 600;
+            color: var(--text-main); margin-bottom: 6px; opacity: 0.8;
+        }
+
+        .input-field {
+            width: 100%; padding: 14px; border-radius: 10px;
+            border: 1px solid var(--border); background: var(--surface-color);
+            color: var(--text-main); font-size: 14px; outline: none;
+            transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.05); 
+        }
+
+        .input-field:focus { 
+            border-color: var(--primary); 
+            box-shadow: 0 0 0 2px rgba(98, 0, 238, 0.1);
+        }
+
+        textarea.input-field { resize: none; min-height: 120px; line-height: 1.5; }
+
+        /* SUBMIT BUTTON */
+        .submit-btn {
+            width: 100%; padding: 15px; background: var(--primary);
+            color: #fff; border: none; border-radius: 12px;
+            font-size: 16px; font-weight: 600; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(98, 0, 238, 0.3);
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            margin-top: 10px;
+        }
+        .submit-btn:active { transform: scale(0.98); }
+
+        /* SUCCESS MESSAGE */
+        .success-box {
+            display: none; text-align: center; padding: 40px 20px;
+            background: var(--surface-color); border-radius: 12px;
+            margin-top: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .success-icon { font-size: 50px; color: #00e676; margin-bottom: 15px; }
+
+    </style>
+</head>
+<body>
+
+    <!-- HEADER (Fixed: Text next to Arrow) -->
+    <header class="app-bar">
+        <button class="icon-btn" onclick="window.history.back()">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="page-title">Report Issue</div>
+    </header>
+
+    <!-- FORM -->
+    <div class="container" id="formContainer">
+        
+        <div class="info-card">
+            <i class="fas fa-bug"></i> 
+            <div>
+                Found a bug in <strong>Gothwad Studio</strong>? <br>
+                Describe it below so we can fix it ASAP.
+            </div>
+        </div>
+
+        <!-- 1. Bug Title -->
+        <div class="form-group">
+            <label class="label">Issue Subject</label>
+            <input type="text" id="bugTitle" class="input-field" placeholder="Example: App crash on startup">
+        </div>
+
+        <!-- 2. Severity -->
+        <div class="form-group">
+            <label class="label">Priority Level</label>
+            <select id="severity" class="input-field">
+                <option value="Low">Low (Minor Glitch)</option>
+                <option value="Medium" selected>Medium (Feature Not Working)</option>
+                <option value="High">High (App Stopped)</option>
+            </select>
+        </div>
+
+        <!-- 3. Description -->
+        <div class="form-group">
+            <label class="label">What happened?</label>
+            <textarea id="bugDesc" class="input-field" placeholder="Please describe the steps to reproduce the error..."></textarea>
+        </div>
+
+        <!-- 4. Fix Suggestion -->
+        <div class="form-group">
+            <label class="label">Do you know a fix? (Optional)</label>
+            <textarea id="bugFix" class="input-field" placeholder="If you are a dev, tell us the solution..." style="min-height: 60px;"></textarea>
+        </div>
+
+        <button class="submit-btn" id="submitBtn" onclick="submitBug()">
+            Send Report <i class="fas fa-paper-plane"></i>
+        </button>
+        
+        <div style="height: 50px;"></div>
+    </div>
+
+    <!-- SUCCESS SCREEN -->
+    <div class="container" id="successScreen">
+        <div class="success-box">
+            <i class="fas fa-check-circle success-icon"></i>
+            <h2 style="color:var(--text-main); margin:0 0 10px 0;">Sent Successfully!</h2>
+            <p style="color:var(--text-sub); font-size:14px; margin-bottom:20px;">
+                Thank you for helping Gothwad Studio. <br>Our team will look into it.
+            </p>
+            <button class="submit-btn" onclick="window.location.href='home.html'" style="background:var(--bg-color); color:var(--text-main); border:1px solid var(--border); box-shadow:none;">
+                Back to Home
+            </button>
+        </div>
+    </div>
+
+    <!-- LOGIC -->
+    <script type="module">
+        import { auth, db, collection, addDoc, serverTimestamp } from './firebase-config.js';
+
+        let currentUser = null;
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        window.submitBug = async function() {
+            const title = document.getElementById('bugTitle').value.trim();
+            const desc = document.getElementById('bugDesc').value.trim();
+            const fix = document.getElementById('bugFix').value.trim();
+            const severity = document.getElementById('severity').value;
+            const btn = document.getElementById('submitBtn');
+
+            if (!title || !desc) {
+                alert("Subject and Description are required.");
+                return;
+            }
+
+            // Button Loading
+            btn.innerHTML = 'Sending...';
+            btn.style.opacity = "0.7";
+            btn.disabled = true;
+
+            try {
+                const deviceInfo = navigator.userAgent; 
+                const userEmail = currentUser.email || "Anonymous";
+
+                // Add to 'bug_reports'
+                await addDoc(collection(db, "bug_reports"), {
+                    title: title,
+                    description: desc,
+                    fixSuggestion: fix,
+                    severity: severity,
+                    status: "Open",
+                    reportedBy: userEmail,
+                    uid: currentUser.uid,
+                    device: deviceInfo,
+                    appName: "Gothwad Studio",
+                    timestamp: serverTimestamp()
+                });
+
+                // Show Success
+                document.getElementById('formContainer').style.display = 'none';
+                document.getElementById('successScreen').style.display = 'block';
+
+            } catch (e) {
+                console.error("Error:", e);
+                alert("Failed to send. Check your internet.");
+                btn.innerHTML = 'Send Report <i class="fas fa-paper-plane"></i>';
+                btn.style.opacity = "1";
+                btn.disabled = false;
+            }
+        }
+    </script>
+
+</body>
+</html>
