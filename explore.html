@@ -3,99 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Explore - GX Studio</title>
+    <title>Explore - Gothwad Studio</title>
     
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* --- LAYOUT --- */
+        /* --- 🛠 LAYOUT FIXES --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
         body {
             background-color: var(--bg-color);
             margin: 0; padding: 0;
-            padding-top: 60px; /* Header */
-            padding-bottom: 70px; /* Nav */
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            overflow-x: hidden;
+            display: flex; flex-direction: column;
+            height: 100vh;
+            overflow: hidden; /* Main scroll body ke andar hoga */
+            font-family: sans-serif;
         }
 
-        /* HEADER */
-        .app-bar {
+        /* 1. HEADER */
+        .explore-header {
             position: fixed; top: 0; left: 0; width: 100%; height: 60px;
-            background: var(--surface-color);
-            display: flex; align-items: center; justify-content: space-between;
+            background-color: var(--surface-color);
             padding: 0 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex; align-items: center; justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             z-index: 100;
             border-bottom: 1px solid var(--border);
         }
-        .page-title { font-size: 18px; font-weight: 800; color: var(--primary); }
-        .icon-btn { background: none; border: none; font-size: 18px; color: var(--text-main); cursor: pointer; }
 
-        /* SEARCH */
-        .search-container {
-            padding: 15px;
-            background: var(--surface-color);
-            border-bottom: 1px solid var(--border);
-        }
-        .search-bar {
-            width: 100%; padding: 10px 15px; border-radius: 8px;
-            border: 1px solid var(--border); background: var(--bg-color);
-            color: var(--text-main); font-size: 14px; outline: none;
-        }
-
-        /* PROJECTS GRID */
-        .container { padding: 15px; }
+        .header-title { font-size: 20px; font-weight: 800; color: var(--text-main); }
         
-        .public-card {
+        .header-actions { display: flex; align-items: center; gap: 15px; }
+        
+        .icon-btn { font-size: 20px; color: var(--text-main); cursor: pointer; text-decoration: none; }
+        .icon-btn:hover { color: var(--primary); }
+
+        .publish-btn {
+            background: var(--primary); color: #fff;
+            width: 30px; height: 30px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; text-decoration: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* 2. MAIN SCROLL AREA */
+        .main-scroll-area {
+            flex: 1;
+            margin-top: 60px; /* Header Height */
+            margin-bottom: 60px; /* Nav Height */
+            overflow-y: auto;
+            padding: 15px;
+            width: 100%;
+        }
+
+        /* Section Titles */
+        .section-label {
+            font-size: 14px; font-weight: 700; color: var(--text-sub);
+            margin-bottom: 10px; margin-top: 10px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        /* 3. TEMPLATES (Horizontal Scroll) */
+        .templates-wrapper {
+            display: flex; 
+            overflow-x: auto; 
+            gap: 12px;
+            padding-bottom: 5px;
+            margin-bottom: 20px;
+            scroll-behavior: smooth;
+        }
+        .templates-wrapper::-webkit-scrollbar { display: none; }
+
+        .template-card {
+            min-width: 130px; height: 160px;
+            border-radius: 12px;
+            background: linear-gradient(145deg, #2d2d2d, #1a1a1a);
+            border: 1px solid var(--border);
+            position: relative; overflow: hidden;
+            display: flex; flex-direction: column; justify-content: flex-end;
+            padding: 10px;
+            cursor: pointer; flex-shrink: 0;
+        }
+        
+        .tpl-icon {
+            position: absolute; top: 15px; left: 15px;
+            font-size: 24px; color: rgba(255,255,255,0.8);
+        }
+
+        .tpl-bg-1 { background: linear-gradient(135deg, #FF6B6B, #556270); }
+        .tpl-bg-2 { background: linear-gradient(135deg, #4ECDC4, #556270); }
+        .tpl-bg-3 { background: linear-gradient(135deg, #A770EF, #CF8BF3); }
+
+        .tpl-name { color: #fff; font-size: 13px; font-weight: bold; margin-bottom: 2px; z-index: 2; }
+        .tpl-desc { font-size: 10px; color: rgba(255,255,255,0.7); z-index: 2; }
+
+        /* 4. REAL PROJECTS LIST */
+        .search-box {
+            width: 100%; padding: 10px 15px; border-radius: 12px;
+            border: 1px solid var(--border); background: var(--surface-color);
+            color: var(--text-main); font-size: 14px; outline: none;
+            margin-bottom: 15px;
+        }
+
+        .project-card {
             background: var(--surface-color);
+            border: 1px solid var(--border);
             border-radius: 12px;
             padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid var(--border);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
+            margin-bottom: 12px;
+            display: flex; flex-direction: column; gap: 10px;
         }
-        .public-card:active { transform: scale(0.98); }
 
-        .card-header { display: flex; align-items: center; margin-bottom: 10px; }
+        .card-header { display: flex; align-items: center; justify-content: space-between; }
+        
+        .user-info { display: flex; align-items: center; gap: 8px; }
         .user-avatar { 
-            width: 30px; height: 30px; border-radius: 50%; 
-            background: #eee; color: #555; 
+            width: 25px; height: 25px; border-radius: 50%; 
+            background: var(--primary); color: #fff; 
             display: flex; align-items: center; justify-content: center;
-            font-size: 12px; font-weight: bold; margin-right: 10px;
+            font-size: 10px; font-weight: bold;
         }
-        .user-name { font-size: 13px; font-weight: 600; color: var(--text-main); }
-        .post-time { font-size: 10px; color: var(--text-sub); margin-left: auto; }
-
-        .project-title { font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 5px; }
-        .project-desc { font-size: 12px; color: var(--text-sub); margin-bottom: 15px; line-height: 1.4; }
+        .user-name { font-size: 12px; font-weight: 600; color: var(--text-main); }
+        
+        .proj-title { font-size: 16px; font-weight: 700; color: var(--primary); }
+        .proj-desc { font-size: 12px; color: var(--text-sub); line-height: 1.4; }
 
         .card-actions {
-            display: flex; gap: 10px; border-top: 1px solid var(--border); padding-top: 10px;
+            display: flex; gap: 10px; border-top: 1px solid var(--border); padding-top: 10px; margin-top: 5px;
         }
         .action-btn {
-            flex: 1; padding: 8px; border-radius: 6px; border: none;
+            flex: 1; padding: 8px; border-radius: 8px; border: none;
             font-size: 12px; font-weight: 600; cursor: pointer;
             display: flex; align-items: center; justify-content: center; gap: 5px;
         }
-        .btn-preview { background: rgba(98, 0, 238, 0.1); color: var(--primary); }
         .btn-clone { background: var(--primary); color: #fff; }
+        .btn-view { background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border); }
 
-        /* LOADING */
-        .loading { text-align: center; margin-top: 50px; color: var(--text-sub); font-size: 14px; }
+        .loading-text { text-align: center; color: var(--text-sub); font-size: 12px; margin-top: 20px; }
 
-        /* NAV */
+        /* 5. BOTTOM NAV */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
             background: var(--surface-color);
             display: flex; justify-content: space-around; align-items: center;
-            border-top: 1px solid var(--border); z-index: 95;
+            border-top: 1px solid var(--border); z-index: 100;
         }
-        .nav-item {
-            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: var(--text-sub); text-decoration: none; height: 100%;
-        }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-sub); text-decoration: none; height: 100%; }
         .nav-item i { font-size: 20px; margin-bottom: 4px; }
         .nav-item span { font-size: 10px; font-weight: 500; }
         .nav-item.active { color: var(--primary); }
@@ -104,44 +158,63 @@
 </head>
 <body>
 
-    <!-- HEADER -->
-    <header class="app-bar">
-        <div class="page-title">Explore</div>
-        <button class="icon-btn" onclick="location.reload()"><i class="fas fa-sync-alt"></i></button>
+    <!-- 1. HEADER -->
+    <header class="explore-header">
+        <div class="header-title">Explore</div>
+        <div class="header-actions">
+            <!-- Publish Button -->
+            <a href="explorepublish.html" class="publish-btn"><i class="fas fa-plus"></i></a>
+            <!-- Settings -->
+            <a href="exploresettings.html" class="icon-btn"><i class="fas fa-cog"></i></a>
+            <!-- Profile -->
+            <a href="exploreprofile.html" class="icon-btn"><i class="fas fa-user-circle"></i></a>
+        </div>
     </header>
 
-    <!-- SEARCH -->
-    <div class="search-container">
-        <input type="text" id="searchInput" class="search-bar" placeholder="Search community projects..." onkeyup="filterProjects()">
+    <!-- 2. MAIN CONTENT -->
+    <div class="main-scroll-area">
+
+        <!-- Search -->
+        <input type="text" id="searchInput" class="search-box" placeholder="Search projects..." onkeyup="filterProjects()">
+
+        <!-- A. TEMPLATES -->
+        <div class="section-label">Start with a Template</div>
+        <div class="templates-wrapper">
+            <!-- Template 1 -->
+            <div class="template-card tpl-bg-1" onclick="useTemplate('portfolio')">
+                <i class="fas fa-id-card tpl-icon"></i>
+                <div class="tpl-name">Portfolio</div>
+                <div class="tpl-desc">Ready to use resume site</div>
+            </div>
+            <!-- Template 2 -->
+            <div class="template-card tpl-bg-2" onclick="useTemplate('login')">
+                <i class="fas fa-sign-in-alt tpl-icon"></i>
+                <div class="tpl-name">Login Form</div>
+                <div class="tpl-desc">Modern glassmorphism</div>
+            </div>
+            <!-- Template 3 -->
+            <div class="template-card tpl-bg-3" onclick="useTemplate('game')">
+                <i class="fas fa-gamepad tpl-icon"></i>
+                <div class="tpl-name">JS Game</div>
+                <div class="tpl-desc">Basic logic starter</div>
+            </div>
+        </div>
+
+        <!-- B. REAL PROJECTS -->
+        <div class="section-label">Community Projects</div>
+        <div id="exploreList">
+            <div class="loading-text"><i class="fas fa-circle-notch fa-spin"></i> Loading...</div>
+        </div>
+
     </div>
 
-    <!-- LIST -->
-    <div class="container" id="exploreList">
-        <div class="loading"><i class="fas fa-circle-notch fa-spin"></i> Loading cool projects...</div>
-    </div>
-
-    <!-- BOTTOM NAV -->
+    <!-- 3. BOTTOM NAV -->
     <nav class="bottom-nav">
-        <a href="home.html" class="nav-item">
-            <i class="fas fa-home"></i>
-            <span>Home</span>
-        </a>
-        <a href="#" class="nav-item active">
-            <i class="fas fa-compass"></i>
-            <span>Explore</span>
-        </a>
-        <a href="globalchat.html" class="nav-item">
-            <i class="fas fa-users"></i>
-            <span>Global</span>
-        </a>
-        <a href="chat.html" class="nav-item">
-            <i class="fas fa-comment-dots"></i>
-            <span>DM</span>
-        </a>
-        <a href="aichat.html" class="nav-item">
-            <i class="fas fa-robot"></i>
-            <span>AI</span>
-        </a>
+        <a href="home.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="#" class="nav-item active"><i class="fas fa-compass"></i><span>Explore</span></a>
+        <a href="globalchat.html" class="nav-item"><i class="fas fa-users"></i><span>Global</span></a>
+        <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>DM</span></a>
+        <a href="aichat.html" class="nav-item"><i class="fas fa-robot"></i><span>AI</span></a>
     </nav>
 
     <!-- LOGIC -->
@@ -151,10 +224,9 @@
         const list = document.getElementById('exploreList');
         let allProjects = [];
 
-        // 1. Fetch Projects from Firebase
+        // 1. Fetch Projects
         async function loadPublicProjects() {
             try {
-                // 'public_projects' collection se data layenge
                 const q = query(collection(db, "public_projects"), orderBy("createdAt", "desc"));
                 const snapshot = await getDocs(q);
                 
@@ -167,7 +239,7 @@
 
             } catch (error) {
                 console.error(error);
-                list.innerHTML = `<div class="loading" style="color:red">Failed to load projects.<br>Check internet connection.</div>`;
+                list.innerHTML = `<div class="loading-text" style="color:#ff4444">Connection Error</div>`;
             }
         }
 
@@ -176,7 +248,7 @@
             list.innerHTML = "";
             
             if(projects.length === 0) {
-                list.innerHTML = `<div class="loading">No public projects yet.<br>Be the first to publish!</div>`;
+                list.innerHTML = `<div class="loading-text">No public projects yet.<br>Be the first to publish!</div>`;
                 return;
             }
 
@@ -184,18 +256,19 @@
                 let initial = p.authorName ? p.authorName.charAt(0).toUpperCase() : "U";
                 
                 let div = document.createElement('div');
-                div.className = 'public-card';
+                div.className = 'project-card';
                 div.innerHTML = `
                     <div class="card-header">
-                        <div class="user-avatar">${initial}</div>
-                        <div class="user-name">${p.authorName || "Unknown Dev"}</div>
-                        <div class="post-time">Community</div>
+                        <div class="user-info">
+                            <div class="user-avatar">${initial}</div>
+                            <div class="user-name">${p.authorName || "Unknown Dev"}</div>
+                        </div>
                     </div>
-                    <div class="project-title">${p.projectName}</div>
-                    <div class="project-desc">${p.description || "No description provided."}</div>
+                    <div class="proj-title">${p.projectName}</div>
+                    <div class="proj-desc">${p.description || "No description."}</div>
                     <div class="card-actions">
-                        <button class="action-btn btn-preview" onclick="viewCode('${p.id}')">
-                            <i class="fas fa-eye"></i> View Code
+                        <button class="action-btn btn-view" onclick="alert('Preview coming soon!')">
+                            <i class="fas fa-eye"></i> View
                         </button>
                         <button class="action-btn btn-clone" onclick="cloneProject('${encodeURIComponent(JSON.stringify(p))}')">
                             <i class="fas fa-download"></i> Clone
@@ -206,50 +279,64 @@
             });
         }
 
-        // 3. Clone Logic (Cloud -> Local)
+        // 3. Clone Logic (Works with Home.html)
         window.cloneProject = function(projectString) {
-            if(!confirm("Clone this project to your workspace?")) return;
+            if(!confirm("Download this project to your workspace?")) return;
 
             try {
                 const p = JSON.parse(decodeURIComponent(projectString));
-                
-                // LocalStorage se purane projects nikalo
                 let localProjects = JSON.parse(localStorage.getItem('gothwad_projects')) || [];
                 
-                // Naya project banao
-                let newId = Date.now();
                 let newProject = {
-                    id: newId,
+                    id: Date.now(),
                     name: p.projectName + " (Clone)",
                     date: new Date().toISOString(),
-                    html: p.html || "",
+                    html: p.html || "<h1>Cloned Project</h1>",
                     css: p.css || "",
                     js: p.js || ""
                 };
 
-                // Add & Save
                 localProjects.push(newProject);
                 localStorage.setItem('gothwad_projects', JSON.stringify(localProjects));
 
-                alert("Project Cloned Successfully! Check your Home.");
+                alert("Project Cloned! Check Home tab.");
                 window.location.href = "home.html";
+            } catch(e) { console.error(e); alert("Error cloning."); }
+        }
 
-            } catch(e) {
-                alert("Error cloning project.");
-                console.error(e);
+        // 4. Template Logic (Hardcoded Templates)
+        window.useTemplate = function(type) {
+            if(!confirm("Create new project from this template?")) return;
+            
+            let html = "", css = "", js = "";
+
+            if(type === 'portfolio') {
+                html = "<h1>My Portfolio</h1><p>Welcome to my site.</p>";
+                css = "body { background: #f0f0f0; font-family: sans-serif; } h1 { color: #333; }";
+            } else if(type === 'login') {
+                html = "<input type='text' placeholder='User'><br><input type='password' placeholder='Pass'><br><button>Login</button>";
+                css = "input { padding: 10px; margin: 5px; } button { background: blue; color: white; }";
+            } else if(type === 'game') {
+                html = "<canvas id='game'></canvas>";
+                js = "console.log('Game Started');";
             }
+
+            let localProjects = JSON.parse(localStorage.getItem('gothwad_projects')) || [];
+            localProjects.push({
+                id: Date.now(),
+                name: type.charAt(0).toUpperCase() + type.slice(1) + " Template",
+                date: new Date().toISOString(),
+                html: html, css: css, js: js
+            });
+            localStorage.setItem('gothwad_projects', JSON.stringify(localProjects));
+            window.location.href = "home.html";
         }
 
-        // 4. View Code Logic (Simple Alert for now, can be upgraded)
-        window.viewCode = function(id) {
-            alert("Preview feature coming in next update! Try Cloning it.");
-        }
-
-        // 5. Filter
+        // 5. Search Filter
         window.filterProjects = function() {
             let q = document.getElementById('searchInput').value.toLowerCase();
             let filtered = allProjects.filter(p => 
-                p.projectName.toLowerCase().includes(q) || 
+                (p.projectName && p.projectName.toLowerCase().includes(q)) || 
                 (p.authorName && p.authorName.toLowerCase().includes(q))
             );
             renderProjects(filtered);

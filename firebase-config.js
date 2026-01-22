@@ -1,4 +1,4 @@
-// --- ☁️ GOTHWAD CLOUD CONFIGURATION (FIXED) --- //
+// --- ☁️ GOTHWAD CLOUD CONFIGURATION (FINAL FIX) --- //
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
@@ -10,23 +10,26 @@ import {
     onAuthStateChanged,
     createUserWithEmailAndPassword, 
     signInWithEmailAndPassword, 
-    updateProfile 
+    updateProfile,
+    updateEmail,      // Profile ke liye
+    updatePassword    // Profile ke liye
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-// 👇 Yahan maine Chat ke liye zaruri functions add kar diye hain
 import { 
     getFirestore, 
     doc, 
     setDoc, 
     getDoc, 
+    updateDoc,         // 👈 YE MISSING THA (Ab Add kar diya)
     collection, 
     getDocs, 
     deleteDoc,
-    addDoc,            // New: Message bhejne ke liye
-    onSnapshot,        // New: Realtime updates ke liye
-    query,             // New: Sort karne ke liye
-    orderBy,           // New: Time ke hisab se dikhane ke liye
-    serverTimestamp    // New: Server time ke liye
+    addDoc,            
+    onSnapshot,        
+    query,             
+    where,             // Profile search ke liye
+    orderBy,           
+    serverTimestamp    
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -43,7 +46,7 @@ const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
 const db = getFirestore(app);
 
-// 👇 IMPORTANT: Ab ye sab functions export honge taaki Global Chat use kar sake
+// EXPORT EVERYTHING
 export { 
     auth, 
     googleProvider, 
@@ -53,16 +56,21 @@ export {
     createUserWithEmailAndPassword, 
     signInWithEmailAndPassword,
     updateProfile,
+    updateEmail,
+    updatePassword,
+    
     db, 
     doc, 
     setDoc, 
     getDoc, 
+    updateDoc,         // 👈 Yahan bhi export karna zaroori hai
     collection, 
     getDocs, 
     deleteDoc,
-    addDoc,            // Exported
-    onSnapshot,        // Exported
-    query,             // Exported
-    orderBy,           // Exported
-    serverTimestamp    // Exported
+    addDoc,            
+    onSnapshot,        
+    query, 
+    where,            
+    orderBy,           
+    serverTimestamp    
 };

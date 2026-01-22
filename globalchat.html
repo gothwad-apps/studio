@@ -3,194 +3,325 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Global Chat</title>
+    <title>Global Chat - Gothwad Studio</title>
     
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <script>
-        let savedTheme = localStorage.getItem('gothwad_theme');
-        if(savedTheme) {
-            document.documentElement.className = savedTheme;
-            document.body.className = savedTheme;
-        }
-    </script>
-
     <style>
-        /* --- 📐 LAYOUT SETUP --- */
+        /* --- 🛠 FINAL STABLE CSS --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
         body {
             display: flex; flex-direction: column; height: 100vh;
             background-color: var(--bg-color); overflow: hidden;
             margin: 0; padding: 0;
+            font-family: sans-serif;
         }
 
-        /* 1. HEADER (Top Fixed) */
-        .chat-header {
-            position: fixed; top: 0; left: 0; width: 100%;
-            height: 60px;
+        /* 1. HEADER */
+        .gs-header {
+            position: fixed; top: 0; left: 0; width: 100%; height: 60px;
             background-color: var(--surface-color);
             padding: 0 15px;
             display: flex; align-items: center; justify-content: space-between;
-            box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             z-index: 100;
             border-bottom: 1px solid var(--border);
         }
 
-        .header-info {
-            display: flex; flex-direction: column;
+        .header-left { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+        .header-title { margin: 0; font-size: 18px; color: var(--text-main); font-weight: 800; white-space: nowrap; }
+        
+        .online-badge { 
+            font-size: 11px; color: var(--primary); 
+            font-weight: 500; display: flex; align-items: center; gap: 5px; 
         }
-        .header-info h2 { margin: 0; font-size: 16px; color: var(--text-main); font-weight: 700; }
-        .online-badge { font-size: 11px; color: var(--primary); font-weight: 600; display: flex; align-items: center; gap: 5px; margin-top: 2px; }
-        .online-dot { width: 8px; height: 8px; background: #00e676; border-radius: 50%; display: inline-block; box-shadow: 0 0 5px #00e676; }
+        .online-dot { width: 8px; height: 8px; background: #00e676; border-radius: 50%; }
 
-        /* Search Styles */
-        .search-container { flex: 1; display: none; margin-left: 15px; }
-        .search-input {
-            width: 100%; padding: 8px 12px; border-radius: 20px;
-            border: 1px solid var(--border); background: var(--bg-color);
-            color: var(--text-main); font-size: 13px; outline: none;
+        .header-right { display: flex; align-items: center; gap: 15px; flex-shrink: 0; }
+        .icon-action-head { font-size: 20px; color: var(--text-main); cursor: pointer; }
+        .profile-icon-head { font-size: 22px; color: var(--primary); cursor: pointer; }
+
+        /* Search Overlay */
+        .search-container { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--surface-color); display: none; align-items: center; padding: 0 10px; z-index: 101; 
         }
-        .btn-icon { background: none; border: none; font-size: 18px; color: var(--text-main); cursor: pointer; padding: 8px; }
+        .search-input { width: 100%; padding: 10px; border: none; background: transparent; font-size: 16px; outline: none; color: var(--text-main); }
 
-        /* 2. CHAT AREA (Middle Scrollable) */
-        .chat-area {
+        /* 2. CHAT AREA */
+        .gs-chat-area {
             flex: 1;
             margin-top: 60px; /* Header Height */
-            margin-bottom: 130px; /* Input (70px) + Nav (60px) */
-            padding: 15px;
+            /* Padding Bottom Calculation: Nav(60) + Footer(60) + Buffer(10) = 130px */
+            padding-bottom: 130px; 
+            padding-left: 10px;
+            padding-right: 10px;
+            padding-top: 15px;
             overflow-y: auto;
-            display: flex; flex-direction: column; gap: 12px;
+            display: flex; flex-direction: column; gap: 8px;
             background-image: radial-gradient(var(--border) 1px, transparent 1px);
             background-size: 20px 20px;
+            scroll-behavior: smooth;
         }
 
-        /* 3. INPUT AREA (Fixed Above Nav) */
-        .input-area {
-            position: fixed;
-            bottom: 60px; /* Nav bar ke upar */
+        /* 3. MESSAGES (WhatsApp Style) */
+        .msg-row { 
+            display: flex; align-items: flex-end; gap: 8px; 
+            max-width: 70%; /* Perfect WhatsApp width */
+            position: relative; 
+            margin-bottom: 4px;
+        }
+        
+        .msg-bubble { 
+            padding: 8px 10px; 
+            border-radius: 12px; 
+            position: relative; display: flex; flex-direction: column; 
+            min-width: 80px; 
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        /* Reply Context */
+        .reply-context-msg {
+            background: rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary);
+            padding: 5px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-bottom: 5px;
+            display: flex; flex-direction: column;
+            opacity: 0.9;
+        }
+        .reply-name { font-weight: bold; color: var(--primary); font-size: 10px; }
+        .reply-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        /* Dots Outside */
+        .msg-options-outside {
+            font-size: 14px; color: var(--text-sub); opacity: 0.5; 
+            cursor: pointer; padding: 5px; margin-bottom: 8px;
+        }
+
+        .msg-name { font-size: 11px; font-weight: 700; margin-bottom: 2px; color: var(--primary); }
+        .msg-text { font-size: 14px; line-height: 1.3; word-wrap: break-word; }
+        .msg-time { font-size: 9px; text-align: right; margin-top: 2px; opacity: 0.7; }
+
+        .code-preview-box {
+            background: #2d2d2d; color: #00e676; padding: 10px; border-radius: 8px;
+            font-family: monospace; font-size: 12px; cursor: pointer; 
+            display: flex; align-items: center; gap: 10px; border: 1px solid #444;
+        }
+
+        /* Sender (Me) */
+        .msg-row.me { align-self: flex-end; flex-direction: row-reverse; }
+        .msg-row.me .msg-bubble { 
+            background-color: var(--primary); color: #fff; 
+            border-radius: 12px 0px 12px 12px; 
+        }
+        .msg-row.me .msg-name { display: none; }
+        .msg-row.me .msg-time { color: rgba(255,255,255,0.8); }
+        .msg-row.me .reply-context-msg { background: rgba(0,0,0,0.2); border-left-color: #fff; color: #eee; }
+        .msg-row.me .reply-name { color: #fff; }
+
+        /* Receiver (Other) */
+        .msg-row.other { align-self: flex-start; }
+        .msg-row.other .msg-bubble { 
+            background-color: var(--surface-color); color: var(--text-main); border: 1px solid var(--border); 
+            border-radius: 0px 12px 12px 12px; 
+        }
+
+        /* 4. FOOTER & INPUT */
+        .gs-footer {
+            position: fixed; 
+            bottom: 60px; /* Sits exactly on top of Nav (60px) */
             left: 0; right: 0;
-            height: 70px;
-            padding: 10px 15px;
-            background-color: var(--surface-color);
+            background: var(--surface-color); 
+            z-index: 101; 
+            border-top: 1px solid var(--border);
+            padding: 8px 10px;
             display: flex; align-items: center; gap: 10px;
-            border-top: 1px solid var(--border);
-            z-index: 90;
-        }
-
-        .main-input {
-            flex: 1; padding: 12px 15px; border-radius: 24px;
-            border: 1px solid var(--border); background: var(--bg-color);
-            color: var(--text-main); outline: none; font-size: 14px;
-        }
-        .send-btn {
-            width: 45px; height: 45px; border-radius: 50%;
-            background: var(--primary); color: #fff; border: none;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            flex-shrink: 0;
-        }
-
-        /* 4. BOTTOM NAV (Fixed Bottom) */
-        .bottom-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%;
             height: 60px;
+        }
+
+        /* Reply Preview Bar - Pops UP from Footer */
+        .reply-preview-bar {
+            position: absolute;
+            bottom: 60px; /* Height of footer */
+            left: 0; right: 0; 
             background: var(--surface-color);
-            display: flex; justify-content: space-around; align-items: center;
+            padding: 8px 15px;
             border-top: 1px solid var(--border);
+            display: none; 
+            align-items: center; justify-content: space-between;
+            border-left: 5px solid var(--primary);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
             z-index: 100;
         }
-        .nav-item {
-            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: var(--text-sub); text-decoration: none; height: 100%; cursor: pointer;
+        .reply-info { display: flex; flex-direction: column; font-size: 12px; overflow: hidden; }
+        .reply-to-label { color: var(--primary); font-weight: bold; font-size: 11px; }
+        .reply-text-preview { color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px; }
+
+        .icon-action { font-size: 20px; color: var(--text-sub); padding: 5px; cursor: pointer; }
+        .icon-action.active { color: #00e676; }
+
+        .main-input {
+            flex: 1; padding: 8px 15px; border-radius: 20px;
+            border: 1px solid var(--border); background: var(--bg-color);
+            color: var(--text-main); outline: none; font-size: 14px; height: 40px;
         }
+        
+        .send-btn {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: var(--primary); color: #fff; border: none;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; cursor: pointer; flex-shrink: 0;
+        }
+
+        /* 5. MENU OVERLAY (Fixed Slide Up) */
+        .menu-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); display: none; z-index: 200;
+            backdrop-filter: blur(2px);
+        }
+        
+        .gs-menu-box {
+            position: fixed; 
+            bottom: 0; left: 0; right: 0; /* Full width bottom sheet */
+            background: var(--surface-color); 
+            border-radius: 20px 20px 0 0;
+            padding: 20px 10px 10px 10px;
+            z-index: 201; 
+            display: flex; flex-direction: column; gap: 5px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+            
+            /* Hidden by default using Transform */
+            transform: translateY(100%); 
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        
+        .gs-menu-box.active { 
+            transform: translateY(0); /* Slide Up */
+        }
+        
+        .menu-item { 
+            padding: 15px; background: var(--bg-color); border-radius: 12px; 
+            text-align: center; font-weight: 600; cursor: pointer; color: var(--text-main);
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .menu-item:active { background: rgba(0,0,0,0.05); }
+        .menu-item.delete { color: #ff4444; }
+
+        #fileInput { display: none; }
+
+        /* NAV */
+        .gs-bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
+            background: var(--surface-color); display: flex; justify-content: space-around; 
+            align-items: center; border-top: 1px solid var(--border); z-index: 100;
+        }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-sub); text-decoration: none; height: 100%; }
         .nav-item i { font-size: 20px; margin-bottom: 4px; }
         .nav-item span { font-size: 10px; font-weight: 500; }
         .nav-item.active { color: var(--primary); }
 
-        /* Message Bubbles */
-        .msg-row { display: flex; align-items: flex-end; gap: 8px; max-width: 85%; animation: fadeIn 0.3s ease; }
-        .msg-avatar { width: 32px; height: 32px; border-radius: 50%; background: #e0e0e0; color: #555; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; flex-shrink: 0; }
-        .msg-bubble { padding: 8px 12px; border-radius: 12px; position: relative; display: flex; flex-direction: column; min-width: 80px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .msg-name { font-size: 11px; font-weight: 700; margin-bottom: 2px; }
-        .msg-text { font-size: 14px; line-height: 1.4; word-wrap: break-word; }
-        .msg-time { font-size: 9px; text-align: right; margin-top: 4px; opacity: 0.7; }
-        
-        .msg-row.me { align-self: flex-end; flex-direction: row-reverse; }
-        .msg-row.me .msg-bubble { background-color: var(--primary); color: #fff; border-bottom-right-radius: 2px; }
-        .msg-row.me .msg-name, .msg-row.me .msg-avatar { display: none; }
-        .msg-row.me .msg-time { color: rgba(255,255,255,0.8); }
-
-        .msg-row.other { align-self: flex-start; }
-        .msg-row.other .msg-bubble { background-color: var(--surface-color); color: var(--text-main); border: 1px solid var(--border); border-bottom-left-radius: 2px; }
-        .msg-row.other .msg-name { color: var(--primary); }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <!-- 1. HEADER (No Back Button) -->
-    <div class="chat-header">
-        <div class="header-info" id="headerInfo">
-            <h2>Global Chat - Gothwad Studio</h2>
+    <!-- HEADER -->
+    <div class="gs-header">
+        <div class="header-left">
+            <h2 class="header-title">Global Developers Chat</h2>
             <div class="online-badge">
                 <span class="online-dot"></span> 
-                <span id="onlineCount">1 Online</span>
+                <span id="onlineCount">Connecting...</span>
             </div>
         </div>
-
-        <!-- Hidden Search Box -->
+        <div class="header-right">
+            <i class="fas fa-search icon-action-head" onclick="toggleSearch()"></i>
+            <i class="fas fa-cog icon-action-head" onclick="window.location.href='globalchatsettings.html'"></i>
+            <i class="fas fa-user-circle profile-icon-head" onclick="window.location.href='profile.html'"></i>
+        </div>
         <div class="search-container" id="searchBox">
-            <input type="text" id="searchInput" class="search-input" placeholder="Search message..." onkeyup="filterMessages()">
-        </div>
-
-        <!-- Search Icon -->
-        <button class="btn-icon" onclick="toggleSearch()">
-            <i class="fas fa-search" id="searchIcon"></i>
-        </button>
-    </div>
-
-    <!-- 2. CHAT LIST -->
-    <div class="chat-area" id="chatList">
-        <div style="text-align:center; margin-top:50px; color:var(--text-sub);">
-            <i class="fas fa-circle-notch fa-spin"></i> Connecting...
+            <i class="fas fa-arrow-left icon-action-head" onclick="toggleSearch()" style="margin-right:10px;"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Search..." onkeyup="filterMessages()">
         </div>
     </div>
 
-    <!-- 3. INPUT AREA (Above Nav) -->
-    <div class="input-area">
-        <input type="text" id="msgInput" class="main-input" placeholder="Type a message...">
+    <!-- CHAT LIST -->
+    <div class="gs-chat-area" id="chatList"></div>
+
+    <!-- FOOTER CONTAINER -->
+    <div class="gs-footer">
+        <!-- Reply Preview (Inside Footer but absolutely positioned) -->
+        <div class="reply-preview-bar" id="replyPreview">
+            <div class="reply-info">
+                <span class="reply-to-label" id="replyToLabel">Replying to User</span>
+                <span class="reply-text-preview" id="replyTextPreview">Message text...</span>
+            </div>
+            <i class="fas fa-times" onclick="cancelReply()" style="color:var(--text-sub); cursor:pointer; padding:5px;"></i>
+        </div>
+
+        <!-- Controls -->
+        <i class="fas fa-paperclip icon-action" onclick="document.getElementById('fileInput').click()"></i>
+        <input type="file" id="fileInput" onchange="handleFileUpload(this)">
+        <i class="fas fa-code icon-action" id="codeBtn" onclick="toggleCodeMode()"></i>
+        <input type="text" id="msgInput" class="main-input" placeholder="Message...">
         <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
     </div>
 
-    <!-- 4. BOTTOM NAVIGATION -->
-    <nav class="bottom-nav">
-        <a href="home.html" class="nav-item">
-            <i class="fas fa-home"></i>
-            <span>Home</span>
-        </a>
-        <a href="explore.html" class="nav-item">
-            <i class="fas fa-globe"></i>
-            <span>Explore</span>
-        </a>
-        <a href="#" class="nav-item active"> <!-- Active Class Here -->
-            <i class="fas fa-comments"></i>
-            <span>Chat</span>
-        </a>
+    <!-- NAV -->
+    <nav class="gs-bottom-nav">
+        <a href="home.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="explore.html" class="nav-item"><i class="fas fa-compass"></i><span>Explore</span></a>
+        <a href="#" class="nav-item active"><i class="fas fa-users"></i><span>Global</span></a>
+        <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>DM</span></a>
+        <a href="aichat.html" class="nav-item"><i class="fas fa-robot"></i><span>AI</span></a>
     </nav>
 
-    <!-- FIREBASE LOGIC -->
+    <!-- MENU -->
+    <div class="menu-overlay" id="menuOverlay" onclick="closeMenu()"></div>
+    <div class="gs-menu-box" id="menuBox">
+        <div class="menu-item" onclick="doCopy()"><i class="fas fa-copy"></i> Copy Text</div>
+        
+        <!-- Only for Other's Msg -->
+        <div class="menu-item" id="btnReply" onclick="doReply()"><i class="fas fa-reply"></i> Reply</div>
+        <div class="menu-item" id="btnDM" onclick="doDM()"><i class="fas fa-comment"></i> Message Privately (DM)</div>
+
+        <!-- Only for My Msg -->
+        <div class="menu-item" id="btnEdit" onclick="doEdit()"><i class="fas fa-pen"></i> Edit Message</div>
+        <div class="menu-item delete" id="btnDelete" onclick="doDelete()"><i class="fas fa-trash"></i> Delete</div>
+        
+        <div class="menu-item" onclick="closeMenu()" style="margin-top:5px; background:transparent;">Cancel</div>
+    </div>
+
     <script type="module">
-        import { auth, db, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from './firebase-config.js';
+        import { auth, db, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, deleteDoc, doc, updateDoc, getDoc, setDoc } from './firebase-config.js';
 
         const chatList = document.getElementById('chatList');
         const msgInput = document.getElementById('msgInput');
         const sendBtn = document.getElementById('sendBtn');
         const onlineCount = document.getElementById('onlineCount');
+        const codeBtn = document.getElementById('codeBtn');
         const chatRef = collection(db, "global_chat");
 
+        // Reply UI Elements
+        const replyPreview = document.getElementById('replyPreview');
+        const replyToLabel = document.getElementById('replyToLabel');
+        const replyTextPreview = document.getElementById('replyTextPreview');
+
         let currentUser = null;
-        let allMessages = []; 
+        let isCodeMode = false;
+        let isEditing = false;
+        let editMsgId = null;
+        
+        let selectedMsgId = null;
+        let selectedMsgText = null;
+        let selectedMsgUid = null;
+        let selectedMsgName = null;
+        
+        let replyData = null; 
+        let allMessages = [];
 
         auth.onAuthStateChanged((user) => {
             if (user) {
@@ -203,123 +334,230 @@
 
         function loadMessages() {
             const q = query(chatRef, orderBy("createdAt", "asc"));
-
             onSnapshot(q, (snapshot) => {
-                allMessages = []; 
-                const uniqueUsers = new Set(); 
+                allMessages = [];
+                const uniqueUsers = new Set();
+                chatList.innerHTML = "";
+
+                if (snapshot.docs.length > 100) {
+                    const deleteCount = snapshot.docs.length - 100;
+                    for (let i = 0; i < deleteCount; i++) {
+                        deleteDoc(doc(db, "global_chat", snapshot.docs[i].id)).catch(e=>console.log(e));
+                    }
+                }
 
                 snapshot.forEach((doc) => {
                     let data = doc.data();
-                    data.id = doc.id; 
+                    data.id = doc.id;
                     allMessages.push(data);
                     if(data.uid) uniqueUsers.add(data.uid);
+                    renderOneMessage(data);
                 });
 
-                // Update Online Count
-                onlineCount.innerText = (uniqueUsers.size || 1) + " Online";
-                
-                renderMessages(allMessages);
-                
-                // Auto Scroll if not searching
-                if(document.getElementById('searchBox').style.display !== 'block') {
+                onlineCount.innerText = uniqueUsers.size + " Online";
+                if(document.getElementById('searchBox').style.display !== 'flex') {
+                    setTimeout(scrollToBottom, 100);
+                }
+            });
+        }
+
+        function renderOneMessage(data) {
+            const isMe = data.uid === currentUser.uid;
+            let userName = data.name || "User";
+            let timeStr = data.createdAt ? data.createdAt.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : "...";
+
+            const row = document.createElement("div");
+            row.className = isMe ? "msg-row me" : "msg-row other";
+
+            let replyHtml = "";
+            if(data.replyTo) {
+                replyHtml = `
+                    <div class="reply-context-msg">
+                        <span class="reply-name">${data.replyTo.name}</span>
+                        <span class="reply-text">${data.replyTo.text}</span>
+                    </div>`;
+            }
+
+            let contentHtml = "";
+            if (data.type === 'code') {
+                contentHtml = `
+                    <div class="code-preview-box" onclick="window.location.href='opencode.html?id=${data.id}'">
+                        <i class="fas fa-file-code"></i> <span>Tap to View Code</span>
+                    </div>`;
+            } else {
+                contentHtml = `<span class="msg-text">${data.text}</span>`;
+            }
+
+            if(data.type === 'file') contentHtml = `<div style="font-size:12px; font-style:italic;"><i class="fas fa-file"></i> File Attachment</div>`;
+
+            const dotsHtml = `<i class="fas fa-ellipsis-v msg-options-outside" onclick="openMenu('${data.id}', '${data.uid}', '${escape(data.text)}', '${data.name}')"></i>`;
+
+            const bubbleHtml = `
+                <div class="msg-bubble">
+                    ${replyHtml}
+                    <span class="msg-name">${isMe ? '' : userName}</span>
+                    ${contentHtml}
+                    <span class="msg-time">${timeStr}</span>
+                </div>`;
+
+            row.innerHTML = bubbleHtml + dotsHtml;
+            chatList.appendChild(row);
+        }
+
+        sendBtn.addEventListener('click', handleSend);
+
+        async function handleSend() {
+            const text = msgInput.value.trim();
+            if (!text) return;
+            
+            msgInput.value = "";
+            cancelReply(false); 
+
+            try {
+                if (isEditing && editMsgId) {
+                    const msgDoc = doc(db, "global_chat", editMsgId);
+                    await updateDoc(msgDoc, { text: text });
+                    isEditing = false;
+                    editMsgId = null;
+                    sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                    sendBtn.style.background = 'var(--primary)';
+                } else {
+                    let myName = currentUser.displayName || currentUser.email.split('@')[0];
+                    let msgData = {
+                        text: text,
+                        uid: currentUser.uid,
+                        name: myName,
+                        type: isCodeMode ? 'code' : 'text',
+                        createdAt: serverTimestamp()
+                    };
+
+                    if (replyData) {
+                        msgData.replyTo = {
+                            id: replyData.id,
+                            name: replyData.name,
+                            text: replyData.text
+                        };
+                    }
+
+                    await addDoc(chatRef, msgData);
+                    replyData = null;
                     scrollToBottom();
                 }
-            }, (error) => {
-                console.error("Error:", error);
-            });
-        }
-
-        window.renderMessages = function(messages) {
-            chatList.innerHTML = "";
-            messages.forEach(data => {
-                const isMe = data.uid === currentUser.uid;
-                let userName = data.name || "Unknown";
-                let firstLetter = userName.charAt(0).toUpperCase();
-
-                let timeStr = "Now";
-                if (data.createdAt) {
-                    const date = data.createdAt.toDate();
-                    let hours = date.getHours();
-                    let mins = String(date.getMinutes()).padStart(2, '0');
-                    timeStr = `${hours % 12 || 12}:${mins} ${hours >= 12 ? 'PM' : 'AM'}`;
-                }
-
-                const row = document.createElement("div");
-                row.className = isMe ? "msg-row me" : "msg-row other";
-                const avatarHtml = `<div class="msg-avatar" style="background:${getColor(firstLetter)}">${firstLetter}</div>`;
-                const bubbleHtml = `
-                    <div class="msg-bubble">
-                        <span class="msg-name">${isMe ? "You" : userName}</span>
-                        <span class="msg-text">${data.text}</span>
-                        <span class="msg-time">${timeStr}</span>
-                    </div>`;
-
-                row.innerHTML = isMe ? bubbleHtml : (avatarHtml + bubbleHtml);
-                chatList.appendChild(row);
-            });
-        }
-
-        window.toggleSearch = function() {
-            let box = document.getElementById('searchBox');
-            let info = document.getElementById('headerInfo');
-            let icon = document.getElementById('searchIcon');
-            let input = document.getElementById('searchInput');
-
-            if(box.style.display === 'block') {
-                box.style.display = 'none';
-                info.style.display = 'flex';
-                icon.className = 'fas fa-search';
-                input.value = "";
-                renderMessages(allMessages); 
-                scrollToBottom();
-            } else {
-                box.style.display = 'block';
-                info.style.display = 'none';
-                icon.className = 'fas fa-times'; 
-                input.focus();
-            }
-        }
-
-        window.filterMessages = function() {
-            let queryText = document.getElementById('searchInput').value.toLowerCase();
-            let filtered = allMessages.filter(msg => 
-                (msg.text || "").toLowerCase().includes(queryText) || 
-                (msg.name || "").toLowerCase().includes(queryText)
-            );
-            renderMessages(filtered);
+                if(isCodeMode) toggleCodeMode();
+            } catch (e) { console.error(e); }
         }
 
         function scrollToBottom() {
             chatList.scrollTop = chatList.scrollHeight;
         }
 
-        async function sendMessage() {
-            const text = msgInput.value.trim();
-            if (text === "") return;
-            msgInput.value = ""; 
+        window.toggleCodeMode = function() {
+            isCodeMode = !isCodeMode;
+            codeBtn.classList.toggle('active');
+            msgInput.placeholder = isCodeMode ? "Paste code here..." : "Message...";
+        }
+        
+        window.handleFileUpload = function(input) {
+            if(input.files.length > 0) alert("File selected: " + input.files[0].name);
+        }
+
+        window.openMenu = function(id, uid, text, name) {
+            selectedMsgId = id;
+            selectedMsgUid = uid;
+            selectedMsgText = unescape(text);
+            selectedMsgName = name || "User";
+
+            const isMine = (currentUser.uid === uid);
+            
+            document.getElementById('btnDelete').style.display = isMine ? 'flex' : 'none';
+            document.getElementById('btnEdit').style.display = isMine ? 'flex' : 'none';
+            document.getElementById('btnReply').style.display = isMine ? 'none' : 'flex';
+            document.getElementById('btnDM').style.display = isMine ? 'none' : 'flex';
+
+            document.getElementById('menuOverlay').style.display = 'block';
+            setTimeout(() => document.getElementById('menuBox').classList.add('active'), 10);
+        }
+
+        window.closeMenu = function() {
+            document.getElementById('menuBox').classList.remove('active');
+            setTimeout(() => document.getElementById('menuOverlay').style.display = 'none', 300);
+        }
+
+        window.doCopy = function() { navigator.clipboard.writeText(selectedMsgText); closeMenu(); }
+        
+        window.doEdit = function() {
+            closeMenu();
+            msgInput.value = selectedMsgText;
+            msgInput.focus();
+            isEditing = true;
+            editMsgId = selectedMsgId;
+            sendBtn.innerHTML = '<i class="fas fa-check"></i>';
+            sendBtn.style.background = '#00e676';
+        }
+
+        window.doDelete = async function() {
+            if(confirm("Permanently delete?")) {
+                await deleteDoc(doc(db, "global_chat", selectedMsgId));
+            }
+            closeMenu();
+        }
+
+        window.doReply = function() {
+            closeMenu();
+            replyData = { id: selectedMsgId, name: selectedMsgName, text: selectedMsgText };
+            replyToLabel.innerText = "Replying to " + selectedMsgName;
+            replyTextPreview.innerText = selectedMsgText;
+            replyPreview.style.display = 'flex';
+            msgInput.focus();
+        }
+
+        window.cancelReply = function(clearData = true) {
+            replyPreview.style.display = 'none';
+            if(clearData) replyData = null;
+        }
+
+        window.doDM = async function() {
+            closeMenu();
+            if(!selectedMsgUid) return;
+            const combinedId = currentUser.uid > selectedMsgUid 
+                ? currentUser.uid + "_" + selectedMsgUid 
+                : selectedMsgUid + "_" + currentUser.uid;
 
             try {
-                let myName = currentUser.displayName;
-                if(!myName && currentUser.email) myName = currentUser.email.split('@')[0];
-                if(!myName) myName = "Dev User";
+                const chatDocRef = doc(db, "chats", combinedId);
+                const chatSnap = await getDoc(chatDocRef);
+                if (!chatSnap.exists()) {
+                    await setDoc(chatDocRef, {
+                        users: [currentUser.uid, selectedMsgUid],
+                        createdAt: serverTimestamp(),
+                        lastMessage: {
+                            text: "Chat started from Global",
+                            senderId: currentUser.uid,
+                            createdAt: new Date()
+                        }
+                    }, { merge: true });
+                }
+                window.location.href = `mainchat.html?uid=${selectedMsgUid}`;
+            } catch (e) { console.error("Error starting DM:", e); }
+        }
 
-                await addDoc(chatRef, {
-                    text: text,
-                    uid: currentUser.uid,
-                    name: myName,
-                    createdAt: serverTimestamp()
-                });
-            } catch (e) {
-                console.error(e);
+        window.toggleSearch = function() {
+            let box = document.getElementById('searchBox');
+            if(box.style.display === 'flex') {
+                box.style.display = 'none';
+                document.getElementById('searchInput').value = '';
+                loadMessages();
+            } else {
+                box.style.display = 'flex';
+                document.getElementById('searchInput').focus();
             }
         }
 
-        sendBtn.addEventListener("click", sendMessage);
-        msgInput.addEventListener("keypress", (e) => { if (e.key === "Enter") sendMessage(); });
-
-        function getColor(letter) {
-            const colors = ['#FFCDD2', '#F8BBD0', '#E1BEE7', '#D1C4E9', '#C5CAE9', '#BBDEFB', '#B3E5FC', '#B2EBF2'];
-            return colors[letter.charCodeAt(0) % colors.length];
+        window.filterMessages = function() {
+            let q = document.getElementById('searchInput').value.toLowerCase();
+            let filtered = allMessages.filter(msg => (msg.text || "").toLowerCase().includes(q));
+            chatList.innerHTML = "";
+            filtered.forEach(data => renderOneMessage(data));
         }
     </script>
 </body>
