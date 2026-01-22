@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Explore - GX Studio</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- LAYOUT --- */
+        body {
+            background-color: var(--bg-color);
+            margin: 0; padding: 0;
+            padding-top: 60px; /* Header */
+            padding-bottom: 70px; /* Nav */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* HEADER */
+        .app-bar {
+            position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+            background: var(--surface-color);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+        .page-title { font-size: 18px; font-weight: 800; color: var(--primary); }
+        .icon-btn { background: none; border: none; font-size: 18px; color: var(--text-main); cursor: pointer; }
+
+        /* SEARCH */
+        .search-container {
+            padding: 15px;
+            background: var(--surface-color);
+            border-bottom: 1px solid var(--border);
+        }
+        .search-bar {
+            width: 100%; padding: 10px 15px; border-radius: 8px;
+            border: 1px solid var(--border); background: var(--bg-color);
+            color: var(--text-main); font-size: 14px; outline: none;
+        }
+
+        /* PROJECTS GRID */
+        .container { padding: 15px; }
+        
+        .public-card {
+            background: var(--surface-color);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        .public-card:active { transform: scale(0.98); }
+
+        .card-header { display: flex; align-items: center; margin-bottom: 10px; }
+        .user-avatar { 
+            width: 30px; height: 30px; border-radius: 50%; 
+            background: #eee; color: #555; 
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: bold; margin-right: 10px;
+        }
+        .user-name { font-size: 13px; font-weight: 600; color: var(--text-main); }
+        .post-time { font-size: 10px; color: var(--text-sub); margin-left: auto; }
+
+        .project-title { font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 5px; }
+        .project-desc { font-size: 12px; color: var(--text-sub); margin-bottom: 15px; line-height: 1.4; }
+
+        .card-actions {
+            display: flex; gap: 10px; border-top: 1px solid var(--border); padding-top: 10px;
+        }
+        .action-btn {
+            flex: 1; padding: 8px; border-radius: 6px; border: none;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 5px;
+        }
+        .btn-preview { background: rgba(98, 0, 238, 0.1); color: var(--primary); }
+        .btn-clone { background: var(--primary); color: #fff; }
+
+        /* LOADING */
+        .loading { text-align: center; margin-top: 50px; color: var(--text-sub); font-size: 14px; }
+
+        /* NAV */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
+            background: var(--surface-color);
+            display: flex; justify-content: space-around; align-items: center;
+            border-top: 1px solid var(--border); z-index: 95;
+        }
+        .nav-item {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--text-sub); text-decoration: none; height: 100%;
+        }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item span { font-size: 10px; font-weight: 500; }
+        .nav-item.active { color: var(--primary); }
+
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="app-bar">
+        <div class="page-title">Explore</div>
+        <button class="icon-btn" onclick="location.reload()"><i class="fas fa-sync-alt"></i></button>
+    </header>
+
+    <!-- SEARCH -->
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-bar" placeholder="Search community projects..." onkeyup="filterProjects()">
+    </div>
+
+    <!-- LIST -->
+    <div class="container" id="exploreList">
+        <div class="loading"><i class="fas fa-circle-notch fa-spin"></i> Loading cool projects...</div>
+    </div>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+        <a href="home.html" class="nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="#" class="nav-item active">
+            <i class="fas fa-compass"></i>
+            <span>Explore</span>
+        </a>
+        <a href="globalchat.html" class="nav-item">
+            <i class="fas fa-users"></i>
+            <span>Global</span>
+        </a>
+        <a href="chat.html" class="nav-item">
+            <i class="fas fa-comment-dots"></i>
+            <span>DM</span>
+        </a>
+        <a href="aichat.html" class="nav-item">
+            <i class="fas fa-robot"></i>
+            <span>AI</span>
+        </a>
+    </nav>
+
+    <!-- LOGIC -->
+    <script type="module">
+        import { db, collection, getDocs, query, orderBy } from './firebase-config.js';
+
+        const list = document.getElementById('exploreList');
+        let allProjects = [];
+
+        // 1. Fetch Projects from Firebase
+        async function loadPublicProjects() {
+            try {
+                // 'public_projects' collection se data layenge
+                const q = query(collection(db, "public_projects"), orderBy("createdAt", "desc"));
+                const snapshot = await getDocs(q);
+                
+                allProjects = [];
+                snapshot.forEach(doc => {
+                    allProjects.push({ id: doc.id, ...doc.data() });
+                });
+
+                renderProjects(allProjects);
+
+            } catch (error) {
+                console.error(error);
+                list.innerHTML = `<div class="loading" style="color:red">Failed to load projects.<br>Check internet connection.</div>`;
+            }
+        }
+
+        // 2. Render UI
+        window.renderProjects = function(projects) {
+            list.innerHTML = "";
+            
+            if(projects.length === 0) {
+                list.innerHTML = `<div class="loading">No public projects yet.<br>Be the first to publish!</div>`;
+                return;
+            }
+
+            projects.forEach(p => {
+                let initial = p.authorName ? p.authorName.charAt(0).toUpperCase() : "U";
+                
+                let div = document.createElement('div');
+                div.className = 'public-card';
+                div.innerHTML = `
+                    <div class="card-header">
+                        <div class="user-avatar">${initial}</div>
+                        <div class="user-name">${p.authorName || "Unknown Dev"}</div>
+                        <div class="post-time">Community</div>
+                    </div>
+                    <div class="project-title">${p.projectName}</div>
+                    <div class="project-desc">${p.description || "No description provided."}</div>
+                    <div class="card-actions">
+                        <button class="action-btn btn-preview" onclick="viewCode('${p.id}')">
+                            <i class="fas fa-eye"></i> View Code
+                        </button>
+                        <button class="action-btn btn-clone" onclick="cloneProject('${encodeURIComponent(JSON.stringify(p))}')">
+                            <i class="fas fa-download"></i> Clone
+                        </button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // 3. Clone Logic (Cloud -> Local)
+        window.cloneProject = function(projectString) {
+            if(!confirm("Clone this project to your workspace?")) return;
+
+            try {
+                const p = JSON.parse(decodeURIComponent(projectString));
+                
+                // LocalStorage se purane projects nikalo
+                let localProjects = JSON.parse(localStorage.getItem('gothwad_projects')) || [];
+                
+                // Naya project banao
+                let newId = Date.now();
+                let newProject = {
+                    id: newId,
+                    name: p.projectName + " (Clone)",
+                    date: new Date().toISOString(),
+                    html: p.html || "",
+                    css: p.css || "",
+                    js: p.js || ""
+                };
+
+                // Add & Save
+                localProjects.push(newProject);
+                localStorage.setItem('gothwad_projects', JSON.stringify(localProjects));
+
+                alert("Project Cloned Successfully! Check your Home.");
+                window.location.href = "home.html";
+
+            } catch(e) {
+                alert("Error cloning project.");
+                console.error(e);
+            }
+        }
+
+        // 4. View Code Logic (Simple Alert for now, can be upgraded)
+        window.viewCode = function(id) {
+            alert("Preview feature coming in next update! Try Cloning it.");
+        }
+
+        // 5. Filter
+        window.filterProjects = function() {
+            let q = document.getElementById('searchInput').value.toLowerCase();
+            let filtered = allProjects.filter(p => 
+                p.projectName.toLowerCase().includes(q) || 
+                (p.authorName && p.authorName.toLowerCase().includes(q))
+            );
+            renderProjects(filtered);
+        }
+
+        // Init
+        loadPublicProjects();
+
+    </script>
+
+</body>
+</html>

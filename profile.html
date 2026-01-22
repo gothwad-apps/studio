@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Profile - Gothwad Studio</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        let savedTheme = localStorage.getItem('gothwad_theme');
+        if(savedTheme) {
+            document.documentElement.className = savedTheme;
+            document.body.className = savedTheme;
+        }
+    </script>
+
+    <style>
+        /* --- 🛠 LAYOUT --- */
+        body {
+            background-color: var(--bg-color);
+            margin: 0; padding: 0;
+            padding-top: 60px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* HEADER */
+        .app-bar {
+            position: fixed; top: 0; left: 0; width: 100%; height: 60px;
+            background: var(--surface-color);
+            display: flex; align-items: center; justify-content: flex-start;
+            gap: 10px; padding: 0 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 100;
+            border-bottom: 1px solid var(--border);
+        }
+        .icon-btn { 
+            background: none; border: none; font-size: 20px; color: var(--text-main); cursor: pointer; padding: 8px;
+        }
+        .page-title { font-size: 18px; font-weight: 700; color: var(--primary); margin: 0; }
+
+        /* PROFILE HEADER CARD */
+        .profile-header {
+            background: var(--surface-color);
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+        
+        .avatar-lg {
+            width: 90px; height: 90px;
+            background: linear-gradient(135deg, var(--primary), #7c4dff);
+            color: #fff;
+            font-size: 36px; font-weight: bold;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 15px auto;
+            border: 4px solid var(--bg-color);
+            box-shadow: 0 5px 15px rgba(98, 0, 238, 0.3);
+        }
+
+        .user-fullname { font-size: 20px; font-weight: 700; color: var(--text-main); margin-bottom: 5px; }
+        .user-email-display { font-size: 13px; color: var(--text-sub); }
+
+        /* STATS GRID */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            padding: 20px 15px;
+        }
+
+        .stat-card {
+            background: var(--surface-color);
+            padding: 15px 10px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        .stat-num { font-size: 18px; font-weight: 800; color: var(--primary); display: block; margin-bottom: 5px; }
+        .stat-label { font-size: 11px; color: var(--text-sub); text-transform: uppercase; font-weight: 600; }
+
+        /* MENU LIST */
+        .settings-list { padding: 0 15px; margin-bottom: 40px; }
+        .section-title { font-size: 12px; color: var(--text-sub); font-weight: 700; margin: 20px 0 10px 5px; }
+
+        .setting-item {
+            background: var(--surface-color);
+            padding: 15px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .setting-item:first-child { border-top-left-radius: 12px; border-top-right-radius: 12px; }
+        .setting-item:last-child { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; border-bottom: none; }
+        .setting-item:active { background: rgba(0,0,0,0.02); }
+
+        .set-left { display: flex; align-items: center; gap: 15px; font-size: 14px; font-weight: 500; }
+        .set-icon { width: 20px; color: var(--primary); text-align: center; }
+        .set-arrow { font-size: 12px; color: var(--text-sub); }
+
+        /* MODAL (Popup for Editing) */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 200;
+            display: none; align-items: center; justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(3px);
+        }
+        
+        .modal-box {
+            background: var(--surface-color);
+            width: 100%; max-width: 400px;
+            padding: 25px; border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: popUp 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+        }
+
+        .input-box {
+            width: 100%; padding: 12px; margin: 15px 0;
+            border: 1px solid var(--border); border-radius: 8px;
+            background: var(--bg-color); color: var(--text-main);
+            font-size: 16px; outline: none;
+        }
+        
+        .modal-btns { display: flex; gap: 10px; margin-top: 10px; }
+        .btn { flex: 1; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
+        .btn-cancel { background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border); }
+        .btn-save { background: var(--primary); color: #fff; }
+
+        @keyframes popUp { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="app-bar">
+        <button class="icon-btn" onclick="window.location.href='home.html'">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <div class="page-title">Profile</div>
+    </header>
+
+    <!-- 1. PROFILE HEADER -->
+    <div class="profile-header">
+        <div class="avatar-lg" id="avatarDisplay">U</div>
+        <div class="user-fullname" id="nameDisplay">Loading...</div>
+        <div class="user-email-display" id="emailDisplay">wait...</div>
+    </div>
+
+    <!-- 2. STATS BOARD -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-num" id="stat-projects">0</span>
+            <span class="stat-label">Projects</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-num" id="stat-msgs">0</span>
+            <span class="stat-label">Msgs Sent</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-num" id="stat-network">0</span>
+            <span class="stat-label">Network</span>
+        </div>
+    </div>
+
+    <!-- 3. SETTINGS LIST -->
+    <div class="settings-list">
+        <div class="section-title">ACCOUNT SETTINGS</div>
+
+        <!-- Change Name -->
+        <div class="setting-item" onclick="openEditModal('name')">
+            <div class="set-left">
+                <i class="fas fa-user-edit set-icon"></i> Change Name
+            </div>
+            <i class="fas fa-chevron-right set-arrow"></i>
+        </div>
+
+        <!-- Change Email -->
+        <div class="setting-item" onclick="openEditModal('email')">
+            <div class="set-left">
+                <i class="fas fa-envelope set-icon"></i> Update Email
+            </div>
+            <i class="fas fa-chevron-right set-arrow"></i>
+        </div>
+
+        <!-- Change Password -->
+        <div class="setting-item" onclick="openEditModal('password')">
+            <div class="set-left">
+                <i class="fas fa-lock set-icon"></i> Change Password
+            </div>
+            <i class="fas fa-chevron-right set-arrow"></i>
+        </div>
+
+        <div class="section-title">DANGER ZONE</div>
+
+        <!-- Logout -->
+        <div class="setting-item" onclick="handleLogout()" style="border-radius:12px; margin-top:5px;">
+            <div class="set-left" style="color:#ff4444;">
+                <i class="fas fa-sign-out-alt set-icon" style="color:#ff4444;"></i> Log Out
+            </div>
+        </div>
+    </div>
+
+    <!-- 🛠 EDIT MODAL -->
+    <div class="modal-overlay" id="editModal">
+        <div class="modal-box">
+            <h3 id="modalTitle" style="margin:0 0 5px 0;">Edit</h3>
+            <p id="modalDesc" style="font-size:12px; color:var(--text-sub); margin:0;">Enter new value</p>
+            
+            <input type="text" id="modalInput" class="input-box">
+            
+            <div class="modal-btns">
+                <button class="btn btn-cancel" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-save" id="modalSaveBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIC -->
+    <script type="module">
+        import { auth, db, updateProfile, collection, getDocs, query, where, updateEmail, updatePassword, signOut, doc, updateDoc } from './firebase-config.js';
+
+        let currentUser = null;
+
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                loadProfile(user);
+                loadStats(user);
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+
+        // --- 1. Load Profile UI ---
+        function loadProfile(user) {
+            document.getElementById('nameDisplay').innerText = user.displayName || "User";
+            document.getElementById('emailDisplay').innerText = user.email;
+            let char = (user.displayName || "U").charAt(0).toUpperCase();
+            document.getElementById('avatarDisplay').innerText = char;
+        }
+
+        // --- 2. Load Stats (Counts) ---
+        async function loadStats(user) {
+            // A. Projects Count (LocalStorage)
+            let projects = JSON.parse(localStorage.getItem('gothwad_projects')) || [];
+            document.getElementById('stat-projects').innerText = projects.length;
+
+            // B. Messages Count (Firebase - Global Chat)
+            try {
+                const msgsQuery = query(collection(db, "global_chat"), where("uid", "==", user.uid));
+                const msgSnap = await getDocs(msgsQuery);
+                document.getElementById('stat-msgs').innerText = msgSnap.size; // Total messages count
+            } catch(e) {
+                console.log("Stats Error (Msgs):", e);
+            }
+
+            // C. Network (Total Community Users)
+            try {
+                const usersSnap = await getDocs(collection(db, "users"));
+                // Dikha raha hai ki app me total kitne log hain
+                document.getElementById('stat-network').innerText = usersSnap.size; 
+            } catch(e) {
+                console.log("Stats Error (Network):", e);
+            }
+        }
+
+        // --- 3. Modal Logic ---
+        let currentMode = '';
+
+        window.openEditModal = function(mode) {
+            const modal = document.getElementById('editModal');
+            const title = document.getElementById('modalTitle');
+            const desc = document.getElementById('modalDesc');
+            const input = document.getElementById('modalInput');
+            const btn = document.getElementById('modalSaveBtn');
+
+            currentMode = mode;
+            modal.style.display = 'flex';
+
+            if(mode === 'name') {
+                title.innerText = "Change Name";
+                desc.innerText = "This will be visible in chats.";
+                input.type = "text";
+                input.value = currentUser.displayName || "";
+                input.placeholder = "Enter new name";
+                btn.onclick = saveName;
+            } 
+            else if(mode === 'email') {
+                title.innerText = "Update Email";
+                desc.innerText = "You may need to login again.";
+                input.type = "email";
+                input.value = currentUser.email || "";
+                input.placeholder = "newemail@example.com";
+                btn.onclick = saveEmail;
+            } 
+            else if(mode === 'password') {
+                title.innerText = "New Password";
+                desc.innerText = "Must be at least 6 characters.";
+                input.type = "password";
+                input.value = "";
+                input.placeholder = "******";
+                btn.onclick = savePassword;
+            }
+        }
+
+        window.closeModal = function() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        // --- 4. Update Functions ---
+
+        async function saveName() {
+            const newName = document.getElementById('modalInput').value.trim();
+            if(!newName) return alert("Name cannot be empty");
+
+            try {
+                // 1. Auth Update
+                await updateProfile(currentUser, { displayName: newName });
+                
+                // 2. Firestore User Doc Update (Taaki chat me naya naam aaye)
+                const userRef = doc(db, "users", currentUser.uid);
+                await updateDoc(userRef, { name: newName });
+
+                alert("Name updated successfully!");
+                location.reload();
+            } catch(e) {
+                alert("Error: " + e.message);
+            }
+        }
+
+        async function saveEmail() {
+            const newEmail = document.getElementById('modalInput').value.trim();
+            if(!newEmail) return;
+
+            try {
+                await updateEmail(currentUser, newEmail);
+                alert("Email updated! Please verify if needed.");
+                location.reload();
+            } catch(e) {
+                alert("Security Error: Please Logout & Login again to change Email.");
+            }
+        }
+
+        async function savePassword() {
+            const newPass = document.getElementById('modalInput').value;
+            if(newPass.length < 6) return alert("Password too short (min 6 chars)");
+
+            try {
+                await updatePassword(currentUser, newPass);
+                alert("Password changed! Logging out for security.");
+                await signOut(auth);
+                window.location.href = "login.html";
+            } catch(e) {
+                alert("Security Error: Please Logout & Login again to change Password.");
+            }
+        }
+
+        window.handleLogout = async function() {
+            if(confirm("Are you sure you want to logout?")) {
+                await signOut(auth);
+                window.location.href = "login.html";
+            }
+        }
+
+    </script>
+</body>
+</html>
