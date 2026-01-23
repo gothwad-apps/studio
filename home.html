@@ -9,14 +9,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* --- 🛠 GLOBAL LAYOUT FIX --- */
+        /* --- 🛠 GLOBAL LAYOUT --- */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body {
             background-color: var(--bg-color);
             margin: 0; padding: 0;
-            padding-top: 60px; /* Header */
-            padding-bottom: 70px; /* Nav Height */
+            padding-top: 60px; /* Space for Header */
+            padding-bottom: 70px; /* Space for Bottom Nav */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             overflow-x: hidden;
         }
@@ -73,66 +73,59 @@
         .search-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); outline: none; }
         
         .container { padding: 20px; width: 100%; }
+        
+        .section-title {
+            font-size: 12px; font-weight: 700; color: var(--text-sub);
+            margin-bottom: 10px; margin-top: 10px; letter-spacing: 0.5px; text-transform: uppercase;
+        }
+
         .project-card {
             background: var(--surface-color); border-radius: 12px; padding: 15px; margin-bottom: 12px;
             display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid var(--border);
+            cursor: pointer;
         }
+        .project-card:active { transform: scale(0.98); transition: 0.1s; }
+
         .proj-icon { width: 45px; height: 45px; background: rgba(187, 134, 252, 0.1); color: var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-right: 15px; flex-shrink: 0; }
         .proj-info { flex: 1; overflow: hidden; }
         .proj-name { font-size: 15px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .proj-date { font-size: 11px; color: var(--text-sub); }
-        .proj-menu-btn { padding: 10px; color: var(--text-sub); background: none; border: none; }
+        .proj-menu-btn { padding: 10px; color: var(--text-sub); background: none; border: none; cursor: pointer; }
 
-        .empty-state { text-align: center; margin-top: 60px; display: none; }
+        .empty-state { text-align: center; margin-top: 40px; display: none; }
         .empty-icon { font-size: 50px; color: var(--border); margin-bottom: 15px; }
+        .loading { text-align: center; margin-top: 20px; color: var(--text-sub); font-size: 12px; }
 
-        /* --- 🧭 BOTTOM NAVIGATION (5 Items) --- */
+        /* BOTTOM NAV */
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%;
-            height: 60px;
-            background: var(--surface-color);
+            height: 60px; background: var(--surface-color);
             display: flex; justify-content: space-around; align-items: center;
             border-top: 1px solid var(--border);
             z-index: 95;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
         }
 
-        .nav-item {
-            flex: 1;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: var(--text-sub); text-decoration: none;
-            height: 100%; cursor: pointer;
-        }
-        
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-sub); text-decoration: none; height: 100%; cursor: pointer; }
         .nav-item i { font-size: 20px; margin-bottom: 4px; }
         .nav-item span { font-size: 10px; font-weight: 500; }
-        
         .nav-item.active { color: var(--primary); }
         .nav-item:active { background-color: rgba(0,0,0,0.03); }
 
-        /* --- ➕ FLOATING ACTION BUTTON (Original Position) --- */
+        /* FAB */
         .fab {
-            position: fixed;
-            bottom: 75px; /* Nav bar (60px) se thoda upar */
-            right: 20px;
-            width: 56px; height: 56px;
-            background: var(--primary);
-            color: white; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            border: none; cursor: pointer; z-index: 90;
-            transition: transform 0.2s;
+            position: fixed; bottom: 75px; right: 20px;
+            width: 56px; height: 56px; background: var(--primary);
+            color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: none; cursor: pointer; z-index: 90; transition: transform 0.2s;
         }
         .fab:active { transform: scale(0.9); }
 
         @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
     </style>
 </head>
 <body>
 
-    <!-- SIDEBAR -->
     <div class="sidebar-overlay" onclick="toggleMenu()"></div>
     <div class="sidebar">
         <div class="user-header">
@@ -152,171 +145,183 @@
         </div>
     </div>
 
-    <!-- APP BAR -->
     <header class="app-bar">
         <button class="icon-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
         <div class="brand-title">Gothwad Studio</div>
         <button class="icon-btn" onclick="toggleSearch()"><i class="fas fa-search"></i></button>
     </header>
 
-    <!-- SEARCH BAR -->
     <div class="search-wrapper" id="search-box">
         <input type="text" id="search-input" class="search-input" placeholder="Search projects..." onkeyup="filterProjects()">
     </div>
 
-    <!-- MAIN CONTENT -->
     <div class="container">
+        
+        <div class="section-title">START FROM TEMPLATE</div>
+        
+        <div class="project-card" onclick="useTemplate('portfolio')">
+            <div class="proj-icon" style="color:#2196f3; background:rgba(33,150,243,0.1);"><i class="fas fa-user-circle"></i></div>
+            <div class="proj-info"><div class="proj-name">Portfolio Website</div><div class="proj-date">HTML/CSS Template</div></div>
+            <i class="fas fa-plus" style="color:var(--text-sub); padding:10px;"></i>
+        </div>
+
+        <div class="project-card" onclick="useTemplate('login')">
+            <div class="proj-icon" style="color:#ff9800; background:rgba(255,152,0,0.1);"><i class="fas fa-sign-in-alt"></i></div>
+            <div class="proj-info"><div class="proj-name">Login Page</div><div class="proj-date">Form Logic Template</div></div>
+            <i class="fas fa-plus" style="color:var(--text-sub); padding:10px;"></i>
+        </div>
+
+        <div class="project-card" onclick="useTemplate('calc')">
+            <div class="proj-icon" style="color:#e91e63; background:rgba(233,30,99,0.1);"><i class="fas fa-calculator"></i></div>
+            <div class="proj-info"><div class="proj-name">Calculator</div><div class="proj-date">JS Logic Template</div></div>
+            <i class="fas fa-plus" style="color:var(--text-sub); padding:10px;"></i>
+        </div>
+
         <div class="section-title">YOUR PROJECTS</div>
-        <div id="project-list"></div>
+        <div id="project-list">
+            <div class="loading"><i class="fas fa-circle-notch fa-spin"></i> Loading...</div>
+        </div>
+
         <div class="empty-state" id="empty-box">
-            <i class="fas fa-folder-open empty-icon"></i>
-            <p style="color:var(--text-sub); font-size:14px;">No projects found.<br>Tap (+) to create one.</p>
+            <i class="fas fa-cloud-upload-alt empty-icon"></i>
+            <p style="color:var(--text-sub); font-size:14px;">No projects in cloud.<br>Tap (+) to create one.</p>
         </div>
     </div>
 
-    <!-- 🧭 5-TAB NAVIGATION -->
     <nav class="bottom-nav">
-        <!-- 1. Home -->
-        <a href="#" class="nav-item active">
-            <i class="fas fa-home"></i>
-            <span>Home</span>
-        </a>
-
-        <!-- 2. Explore (Wapas aa gaya) -->
-        <a href="explore.html" class="nav-item">
-            <i class="fas fa-compass"></i>
-            <span>Explore</span>
-        </a>
-
-        <!-- 3. Global Chat -->
-        <a href="globalchat.html" class="nav-item">
-            <i class="fas fa-users"></i>
-            <span>Global</span>
-        </a>
-
-        <!-- 4. DM / Chat -->
-        <a href="chat.html" class="nav-item">
-            <i class="fas fa-comment-dots"></i>
-            <span>DM</span>
-        </a>
-
-        <!-- 5. AI -->
-        <a href="aichat.html" class="nav-item">
-            <i class="fas fa-robot"></i>
-            <span>AI</span>
-        </a>
+        <a href="#" class="nav-item active"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="explore.html" class="nav-item"><i class="fas fa-compass"></i><span>Explore</span></a>
+        <a href="globalchat.html" class="nav-item"><i class="fas fa-users"></i><span>Global</span></a>
+        <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>DM</span></a>
+        <a href="aichat.html" class="nav-item"><i class="fas fa-robot"></i><span>AI</span></a>
     </nav>
 
-    <!-- ➕ FLOATING BUTTON (Apni purani jagah par) -->
-    <button class="fab" onclick="goToCreate()">
-        <i class="fas fa-plus"></i>
-    </button>
+    <button class="fab" onclick="goToCreate()"><i class="fas fa-plus"></i></button>
 
-    <!-- LOGIC -->
     <script type="module">
-        import { auth, signOut, onAuthStateChanged } from './firebase-config.js';
+        import { auth, db, signOut, onAuthStateChanged, collection, query, where, onSnapshot, deleteDoc, doc, addDoc, serverTimestamp } from './firebase-config.js';
 
-        // --- GLOBAL WINDOW FUNCTIONS ---
-        window.toggleMenu = function() {
-            document.querySelector('.sidebar').classList.toggle('active');
-            document.querySelector('.sidebar-overlay').classList.toggle('active');
-        }
+        let currentUser = null;
+        const list = document.getElementById('project-list');
+        const empty = document.getElementById('empty-box');
 
-        window.toggleSearch = function() {
-            let box = document.getElementById('search-box');
-            let input = document.getElementById('search-input');
-            if(box.style.display === 'block') {
-                box.style.display = 'none'; input.value = ''; window.renderProjects(); 
-            } else {
-                box.style.display = 'block'; input.focus();
-            }
-        }
-
-        window.goToCreate = function() {
-            window.location.href = "createproject.html";
-        }
-
-        window.handleLogout = async function() {
-            if(confirm("Log out of Studio?")) {
-                await signOut(auth);
-                window.location.href = "login.html";
-            }
-        }
-
-        window.openProject = function(id) {
-            window.location.href = "filemanager.html?id=" + id;
-        }
-
-        window.deleteProject = function(id, event) {
-            event.stopPropagation();
-            if(confirm("Delete this project?")) {
-                let projects = JSON.parse(localStorage.getItem('gothwad_projects')) || [];
-                projects = projects.filter(p => p.id !== id);
-                localStorage.setItem('gothwad_projects', JSON.stringify(projects));
-                renderProjects();
-            }
-        }
-
-        // --- FILTER ---
-        window.filterProjects = function() {
-            let query = document.getElementById('search-input').value.toLowerCase();
-            let cards = document.querySelectorAll('.project-card');
-            let hasVisible = false;
-
-            cards.forEach(card => {
-                let name = card.querySelector('.proj-name').innerText.toLowerCase();
-                if(name.includes(query)) {
-                    card.style.display = "flex"; hasVisible = true;
-                } else {
-                    card.style.display = "none";
-                }
-            });
-
-            let empty = document.getElementById('empty-box');
-            empty.style.display = (!hasVisible && query.length > 0) ? 'block' : 'none';
-            if(!hasVisible && query.length === 0) renderProjects();
-        }
-
-        // --- INTERNAL LOGIC ---
-        onAuthStateChanged(auth, async (user) => {
+        onAuthStateChanged(auth, (user) => {
             if (user) {
-                try { await user.reload(); user = auth.currentUser; } catch(e) {}
+                currentUser = user;
                 document.getElementById('user-name').innerText = user.displayName || "Developer";
                 document.getElementById('user-email').innerText = user.email;
                 document.getElementById('user-avatar').innerText = (user.displayName || "U").charAt(0).toUpperCase();
+                loadProjects();
             } else {
                 window.location.href = "login.html";
             }
         });
 
-        window.renderProjects = function() {
-            let projects = JSON.parse(localStorage.getItem('gothwad_projects')) || [];
-            let list = document.getElementById('project-list');
-            let empty = document.getElementById('empty-box');
+        function loadProjects() {
+            // FIX: Removed 'orderBy' from Firestore query to prevent Index Error.
+            // We fetch simple list first, then sort in JavaScript.
+            const q = query(
+                collection(db, "projects"),
+                where("uid", "==", currentUser.uid)
+            );
 
-            list.innerHTML = "";
-            if(projects.length === 0) { empty.style.display = "block"; return; }
-            empty.style.display = "none";
+            onSnapshot(q, (snapshot) => {
+                list.innerHTML = "";
+                if (snapshot.empty) {
+                    empty.style.display = "block";
+                } else {
+                    empty.style.display = "none";
+                    
+                    // 1. Get Data
+                    let projects = [];
+                    snapshot.forEach((doc) => {
+                        projects.push({ id: doc.id, ...doc.data() });
+                    });
 
-            projects.reverse().forEach(p => {
-                let date = new Date(p.date).toLocaleDateString();
-                let div = document.createElement('div');
-                div.className = 'project-card';
-                div.onclick = () => window.openProject(p.id);
-                div.innerHTML = `
-                    <div class="proj-icon"><i class="fas fa-code"></i></div>
-                    <div class="proj-info">
-                        <div class="proj-name">${p.name}</div>
-                        <div class="proj-date">Created: ${date}</div>
-                    </div>
-                    <button class="proj-menu-btn" onclick="window.deleteProject(${p.id}, event)">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                `;
-                list.appendChild(div);
+                    // 2. Client-Side Sorting (Newest First)
+                    projects.sort((a, b) => {
+                        let dateA = a.createdAt && typeof a.createdAt.toMillis === 'function' ? a.createdAt.toMillis() : 0;
+                        let dateB = b.createdAt && typeof b.createdAt.toMillis === 'function' ? b.createdAt.toMillis() : 0;
+                        return dateB - dateA;
+                    });
+
+                    // 3. Render
+                    projects.forEach(p => renderOneProject(p.id, p));
+                }
+            }, (error) => {
+                console.error("Error:", error);
+                if(error.code === 'permission-denied') {
+                     list.innerHTML = `<div class="loading" style="color:red">Permission Denied.</div>`;
+                } else {
+                     list.innerHTML = `<div class="loading" style="color:red">Error loading data.</div>`;
+                }
             });
         }
-        renderProjects();
+
+        function renderOneProject(id, data) {
+            let date = "Just now";
+            if(data.createdAt && typeof data.createdAt.toDate === 'function') {
+                date = data.createdAt.toDate().toLocaleDateString();
+            }
+            
+            let div = document.createElement('div');
+            div.className = 'project-card';
+            div.dataset.name = (data.name || "").toLowerCase();
+            div.onclick = () => window.openProject(id);
+            
+            div.innerHTML = `
+                <div class="proj-icon"><i class="fas fa-code"></i></div>
+                <div class="proj-info">
+                    <div class="proj-name">${data.name}</div>
+                    <div class="proj-date">Created: ${date}</div>
+                </div>
+                <button class="proj-menu-btn" onclick="window.deleteProject('${id}', event)">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            list.appendChild(div);
+        }
+
+        window.useTemplate = async function(type) {
+            if(!confirm("Create new project from template?")) return;
+            
+            let tplName = "", html = "", css = "", js = "";
+            if(type === 'portfolio') { tplName = "My Portfolio"; html = "<h1>John Doe</h1>"; css = "body{background:#eee;}"; }
+            else if(type === 'login') { tplName = "Login Page"; html = "<input><button>Login</button>"; }
+            else if(type === 'calc') { tplName = "Calculator"; html = "<button>1</button>"; js = "alert('Calc')"; }
+
+            try {
+                // Creates Document
+                const docRef = await addDoc(collection(db, "projects"), {
+                    name: tplName, html: html, css: css, js: js,
+                    uid: currentUser.uid, createdAt: serverTimestamp()
+                });
+                // Redirects to FileManager
+                window.location.href = "filemanager.html?id=" + docRef.id;
+            } catch(e) { alert("Error: " + e.message); }
+        }
+
+        window.openProject = function(id) { 
+            // Opens FileManager to edit the project
+            window.location.href = "filemanager.html?id=" + id; 
+        }
+        
+        window.deleteProject = async function(id, event) {
+            event.stopPropagation();
+            if(confirm("Delete from Cloud?")) { await deleteDoc(doc(db, "projects", id)); }
+        }
+        window.toggleMenu = function() { document.querySelector('.sidebar').classList.toggle('active'); document.querySelector('.sidebar-overlay').classList.toggle('active'); }
+        window.toggleSearch = function() {
+            let box = document.getElementById('search-box');
+            if(box.style.display === 'block') { box.style.display = 'none'; document.getElementById('search-input').value = ''; filterProjects(); }
+            else { box.style.display = 'block'; document.getElementById('search-input').focus(); }
+        }
+        window.filterProjects = function() {
+            let q = document.getElementById('search-input').value.toLowerCase();
+            document.querySelectorAll('#project-list .project-card').forEach(c => c.style.display = c.dataset.name.includes(q) ? "flex" : "none");
+        }
+        window.goToCreate = function() { window.location.href = "createproject.html"; }
+        window.handleLogout = async function() { if(confirm("Log out?")) { await signOut(auth); window.location.href = "login.html"; } }
     </script>
 </body>
 </html>

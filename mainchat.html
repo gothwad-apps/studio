@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chat</title>
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- STRICT MOBILE LAYOUT --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-color);
+            padding: 0; margin: 0;
+            display: flex; flex-direction: column; height: 100vh;
+            overflow: hidden; /* Prevent body scroll */
+        }
+
+        /* 1. HEADER (Fixed Top) */
+        .chat-header {
+            height: 60px; background-color: var(--surface-color);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 10px; border-bottom: 1px solid var(--border);
+            position: fixed; top: 0; left: 0; right: 0; /* Ensures full width */
+            z-index: 100;
+            width: 100%;
+        }
+
+        .user-section { 
+            display: flex; align-items: center; gap: 8px; 
+            flex: 1; /* Takes remaining space */
+            overflow: hidden; /* Prevent text overflow */
+            cursor: pointer; 
+        }
+        
+        .back-btn { font-size: 18px; color: var(--text-main); padding: 8px; cursor: pointer; }
+        
+        .chat-avatar {
+            width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+            background: linear-gradient(135deg, var(--primary), #7c4dff);
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-weight: bold; font-size: 14px;
+        }
+
+        .chat-info { display: flex; flex-direction: column; overflow: hidden; }
+        .chat-name { 
+            font-size: 15px; font-weight: 700; color: var(--text-main); 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
+        }
+        .chat-status { font-size: 10px; color: var(--text-sub); }
+
+        .header-icons { 
+            display: flex; gap: 15px; color: var(--primary); 
+            font-size: 18px; padding-left: 10px; flex-shrink: 0;
+        }
+        .icon-clickable { cursor: pointer; }
+
+        /* Dropdown Menu */
+        .dropdown-menu {
+            position: absolute; top: 50px; right: 5px;
+            background: var(--surface-color); width: 140px; border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid var(--border);
+            display: none; flex-direction: column; overflow: hidden; z-index: 200;
+        }
+        .menu-item { padding: 12px 15px; color: var(--text-main); font-size: 13px; cursor: pointer; }
+        .menu-item:hover { background: var(--bg-color); }
+
+        /* 2. CHAT AREA */
+        .msg-container {
+            flex: 1; 
+            margin-top: 60px; /* Header Space */
+            margin-bottom: 125px; /* Input (65px) + Nav (60px) Space */
+            padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
+            width: 100%;
+        }
+
+        .msg-row { display: flex; max-width: 85%; }
+        .msg-row.me { align-self: flex-end; justify-content: flex-end; }
+        .msg-row.other { align-self: flex-start; }
+
+        .bubble {
+            padding: 8px 12px; border-radius: 12px;
+            font-size: 14px; line-height: 1.4; position: relative;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            word-wrap: break-word; /* Prevents text overflow */
+        }
+
+        .msg-row.me .bubble {
+            background-color: var(--primary); color: #fff;
+            border-bottom-right-radius: 2px;
+        }
+        .msg-row.other .bubble {
+            background-color: var(--surface-color); color: var(--text-main);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 2px;
+        }
+
+        .msg-time { font-size: 9px; text-align: right; margin-top: 4px; opacity: 0.7; }
+
+        /* 3. CHAT INPUT FOOTER (Fixed Above Nav) */
+        .chat-footer {
+            position: fixed; 
+            bottom: 60px; /* Sits exactly above Bottom Nav */
+            left: 0; right: 0; width: 100%;
+            background-color: var(--surface-color); 
+            height: 65px;
+            border-top: 1px solid var(--border);
+            display: flex; align-items: center; 
+            padding: 5px 8px; gap: 8px;
+            z-index: 90;
+        }
+
+        .footer-icon {
+            font-size: 20px; color: var(--text-sub); padding: 8px;
+            cursor: pointer; flex-shrink: 0;
+        }
+        .footer-icon:active { color: var(--primary); }
+
+        .input-box-wrapper {
+            flex: 1; /* Takes available space */
+            background-color: var(--bg-color);
+            border-radius: 20px; padding: 8px 12px;
+            display: flex; align-items: center; border: 1px solid var(--border);
+            height: 40px;
+        }
+
+        .chat-input {
+            width: 100%; background: transparent; border: none;
+            color: var(--text-main); font-size: 14px; outline: none;
+        }
+
+        .send-circle {
+            width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+            background-color: var(--primary); color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        #hidden-file-input { display: none; }
+
+        /* 4. BOTTOM NAV (Fixed Bottom) */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
+            background: var(--surface-color);
+            display: flex; justify-content: space-around; align-items: center;
+            border-top: 1px solid var(--border); z-index: 100;
+        }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-sub); text-decoration: none; height: 100%; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item span { font-size: 10px; font-weight: 500; }
+        .nav-item.active { color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <div class="chat-header">
+        <div class="user-section">
+            <i class="fas fa-arrow-left back-btn" onclick="history.back()"></i>
+            <div class="chat-avatar" id="u-avatar"></div>
+            <div class="chat-info">
+                <span class="chat-name" id="u-name">Loading...</span>
+                <span class="chat-status">Active Now</span>
+            </div>
+        </div>
+        <div class="header-icons">
+            <i class="fas fa-phone icon-clickable" style="color:var(--text-sub)"></i>
+            <i class="fas fa-ellipsis-v icon-clickable" style="color:var(--text-sub)" onclick="toggleMenu()"></i>
+        </div>
+        
+        <div class="dropdown-menu" id="menu">
+            <div class="menu-item">View Profile</div>
+            <div class="menu-item">Clear Chat</div>
+            <div class="menu-item" style="color:red;">Block User</div>
+        </div>
+    </div>
+
+    <div class="msg-container" id="msgArea"></div>
+
+    <div class="chat-footer">
+        <i class="fas fa-paperclip footer-icon" onclick="triggerFile()"></i>
+        <input type="file" id="hidden-file-input" onchange="handleFile(this)">
+
+        <div class="input-box-wrapper">
+            <input type="text" id="msgInput" class="chat-input" placeholder="Message..." oninput="checkInput()">
+            <i class="fas fa-camera footer-icon" style="padding:0; margin-left:8px; font-size:16px;"></i>
+        </div>
+
+        <div class="send-circle" id="actionBtn" onclick="handleAction()">
+            <i class="fas fa-microphone" id="btnIcon"></i>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="home.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="explore.html" class="nav-item"><i class="fas fa-compass"></i><span>Explore</span></a>
+        <a href="globalchat.html" class="nav-item"><i class="fas fa-users"></i><span>Global</span></a>
+        <a href="#" class="nav-item active"><i class="fas fa-comment-dots"></i><span>DM</span></a>
+        <a href="aichat.html" class="nav-item"><i class="fas fa-robot"></i><span>AI</span></a>
+    </nav>
+
+    <script type="module">
+        import { auth, db, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, setDoc, doc, getDoc, onAuthStateChanged } from './firebase-config.js';
+
+        let savedTheme = localStorage.getItem('gothwad_theme');
+        if(savedTheme) document.body.classList.add(savedTheme);
+
+        const params = new URLSearchParams(window.location.search);
+        const otherUid = params.get('uid');
+        
+        // --- ⚡ NAME FIX: Decodes spaces & fallbacks to "User" ---
+        let otherName = decodeURIComponent(params.get('name') || "User");
+        if(otherName === "undefined" || otherName === "null") otherName = "User";
+
+        document.getElementById('u-name').innerText = otherName;
+        document.getElementById('u-avatar').innerText = otherName.charAt(0).toUpperCase();
+
+        let myUid = null;
+        let chatId = null;
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                myUid = user.uid;
+                chatId = myUid < otherUid ? `${myUid}_${otherUid}` : `${otherUid}_${myUid}`;
+                
+                // If name is "User", try to fetch it from DB (Optional Safety)
+                if(otherName === "User") {
+                    try {
+                        const userDoc = await getDoc(doc(db, "users", otherUid));
+                        if(userDoc.exists()) {
+                            otherName = userDoc.data().name || "User";
+                            document.getElementById('u-name').innerText = otherName;
+                            document.getElementById('u-avatar').innerText = otherName.charAt(0).toUpperCase();
+                        }
+                    } catch(e) {}
+                }
+                
+                loadMessages();
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        function loadMessages() {
+            const q = query(collection(db, "chats", chatId, "messages"), orderBy("createdAt", "asc"));
+            onSnapshot(q, (snapshot) => {
+                const area = document.getElementById('msgArea');
+                area.innerHTML = "";
+                snapshot.forEach(doc => renderMessage(doc.data()));
+                area.scrollTop = area.scrollHeight;
+            });
+        }
+
+        function renderMessage(msg) {
+            const area = document.getElementById('msgArea');
+            const isMe = msg.sender === myUid;
+            
+            let time = "";
+            if(msg.createdAt) {
+                const d = msg.createdAt.toDate();
+                time = d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            }
+
+            const div = document.createElement('div');
+            div.className = isMe ? 'msg-row me' : 'msg-row other';
+            
+            const checkIcon = isMe ? '<i class="fas fa-check" style="margin-left:3px; font-size:9px;"></i>' : '';
+
+            div.innerHTML = `
+                <div class="bubble">
+                    ${msg.text}
+                    <span class="msg-time">${time} ${checkIcon}</span>
+                </div>
+            `;
+            area.appendChild(div);
+        }
+
+        window.checkInput = () => {
+            const txt = document.getElementById('msgInput').value.trim();
+            const icon = document.getElementById('btnIcon');
+            if(txt.length > 0) icon.className = "fas fa-paper-plane";
+            else icon.className = "fas fa-microphone";
+        }
+
+        window.handleAction = async () => {
+            const input = document.getElementById('msgInput');
+            const icon = document.getElementById('btnIcon');
+            
+            if(icon.classList.contains('fa-microphone')) {
+                alert("Voice feature coming soon!");
+                return;
+            }
+
+            const text = input.value.trim();
+            if(!text) return;
+
+            input.value = "";
+            checkInput(); 
+
+            await sendMessageToCloud(text);
+        };
+
+        async function sendMessageToCloud(text) {
+            await addDoc(collection(db, "chats", chatId, "messages"), {
+                text: text, sender: myUid, createdAt: serverTimestamp()
+            });
+
+            // Update Recent Chats
+            const recentDataMe = { uid: otherUid, name: otherName, lastMessage: text, timestamp: serverTimestamp() };
+            // Note: Saving my name so other user sees it
+            const recentDataOther = { uid: myUid, name: auth.currentUser.displayName || "User", lastMessage: text, timestamp: serverTimestamp() };
+
+            await setDoc(doc(db, "users", myUid, "recent_chats", otherUid), recentDataMe);
+            await setDoc(doc(db, "users", otherUid, "recent_chats", myUid), recentDataOther);
+        }
+
+        window.triggerFile = () => document.getElementById('hidden-file-input').click();
+
+        window.handleFile = async (input) => {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const msg = `📎 File: ${file.name}`;
+                await sendMessageToCloud(msg);
+            }
+        }
+
+        window.toggleMenu = () => {
+            const m = document.getElementById('menu');
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+        }
+        
+        document.addEventListener('click', (e) => {
+            if (!e.target.matches('.fa-ellipsis-v')) {
+                document.getElementById('menu').style.display = 'none';
+            }
+        });
+
+    </script>
+</body>
+</html>

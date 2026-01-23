@@ -3,145 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Editor - Gothwad Studio</title>
+    <title>Editor</title>
     
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Ace Editor CDN (The Brain) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ext-language_tools.js"></script>
 
     <style>
-        /* --- ⌨️ IDE STYLES --- */
+        /* --- WHITE THEME EDITOR --- */
         body {
-            background-color: #1e1e1e;
+            background-color: #ffffff;
             margin: 0; padding: 0;
             height: 100vh; display: flex; flex-direction: column;
-            overflow: hidden; /* No scroll on body */
+            overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            user-select: none; /* UI select disable, Editor handles text */
         }
 
-        /* 1. TOP HEADER */
+        /* 1. HEADER */
         .ide-header {
-            height: 50px; background: #252526;
+            height: 55px; background: #f8f9fa;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 10px; border-bottom: 1px solid #333;
+            padding: 0 10px; border-bottom: 1px solid #ddd;
+            z-index: 10;
         }
 
-        .file-info { display: flex; align-items: center; gap: 10px; color: #ccc; font-size: 14px; font-weight: bold; }
-        .back-icon { padding: 10px; cursor: pointer; }
+        .file-info { display: flex; align-items: center; gap: 10px; }
+        .back-icon { font-size: 18px; color: #555; padding: 10px; cursor: pointer; }
 
-        .ide-actions { display: flex; gap: 10px; }
+        .file-name { font-size: 16px; font-weight: 700; color: #333; }
+        .project-sub { font-size: 10px; color: #666; display: block; margin-top: -2px; }
+
+        .ide-actions { display: flex; gap: 8px; align-items: center; position: relative; }
         
-        /* Run Button (Green Play) */
-        .btn-run {
-            background: #2e7d32; color: #fff; border: none;
-            padding: 6px 15px; border-radius: 4px; font-size: 12px;
-            display: flex; align-items: center; gap: 5px; cursor: pointer;
-        }
-        .btn-save {
-            background: #007acc; color: #fff; border: none;
-            padding: 8px; border-radius: 4px; cursor: pointer;
-        }
+        .save-status { font-size: 10px; color: #888; font-weight: 500; min-width: 35px; text-align: right; }
 
-        /* 2. TAB BAR (File Switcher) */
-        .tab-bar {
-            height: 35px; background: #1e1e1e; display: flex;
-            border-bottom: 1px solid #333; overflow-x: auto;
+        /* Buttons */
+        .btn-action {
+            width: 35px; height: 35px; border-radius: 50%; border: none;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 14px; transition: 0.2s;
+            background: #fff; border: 1px solid #ddd; color: #333;
         }
-        .tab {
-            padding: 0 15px; display: flex; align-items: center; gap: 8px;
-            font-size: 13px; color: #888; border-right: 1px solid #333;
-            cursor: pointer; min-width: 100px;
-        }
-        .tab.active { background: #1e1e1e; color: #fff; border-top: 2px solid var(--primary); }
-        .tab-icon { font-size: 14px; }
-        .unsaved-dot { width: 8px; height: 8px; background: #fff; border-radius: 50%; display: none; }
-        .tab.unsaved .unsaved-dot { display: block; }
+        .btn-run { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
+        .btn-action:active { background: #eee; }
 
-        /* 3. EDITOR AREA */
-        #editor-container {
-            flex: 1; position: relative;
-        }
-        #editor { 
-            position: absolute; top: 0; right: 0; bottom: 0; left: 0; 
-            font-size: 14px; line-height: 20px;
-        }
+        /* 2. EDITOR AREA */
+        #editor-container { flex: 1; position: relative; background: #fff; }
+        #editor { position: absolute; top: 0; right: 0; bottom: 0; left: 0; font-size: 14px; line-height: 22px; }
 
-        /* 4. KEYBOARD HELPER (Quick Keys) */
+        /* 3. KEYBOARD HELPER */
         .quick-keys {
-            height: 45px; background: #2d2d2d;
+            height: 45px; background: #f1f1f1;
             display: flex; align-items: center; gap: 5px;
-            padding: 0 5px; overflow-x: auto;
-            border-top: 1px solid #333;
+            padding: 0 8px; overflow-x: auto;
+            border-top: 1px solid #ddd;
         }
         .key-btn {
             min-width: 40px; height: 35px;
-            background: #3c3c3c; border: none; color: #fff;
-            border-radius: 4px; font-family: monospace; font-size: 16px;
-            cursor: pointer;
+            background: #fff; border: 1px solid #ccc; color: #333;
+            border-radius: 6px; font-family: monospace; font-size: 16px;
+            cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
-        .key-btn:active { background: var(--primary); }
+        .key-btn:active { background: var(--primary); color: #fff; }
 
-        /* 5. PREVIEW WINDOW (Overlay) */
-        #preview-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #fff; z-index: 100; display: none;
-            flex-direction: column;
-        }
-        .preview-header {
-            height: 50px; background: #f5f5f5; border-bottom: 1px solid #ddd;
-            display: flex; justify-content: space-between; align-items: center; padding: 0 15px;
-        }
-        .preview-title { font-weight: bold; color: #333; font-size: 14px; }
-        .close-preview { color: #ff4444; font-size: 24px; cursor: pointer; }
+        /* --- MENUS --- */
         
-        iframe { flex: 1; border: none; width: 100%; background: #fff; }
-
-        /* Console Drawer */
-        #console-drawer {
-            height: 150px; background: #222; color: #0f0;
-            border-top: 1px solid #444; padding: 10px;
-            font-family: monospace; font-size: 12px; overflow-y: auto;
-            display: none;
+        /* Top Right Menu */
+        .dropdown-menu {
+            position: absolute; top: 45px; right: 0;
+            background: #fff; width: 160px;
+            border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            border: 1px solid #eee; display: none; flex-direction: column; z-index: 100;
         }
+        .menu-item { padding: 12px 15px; font-size: 14px; color: #333; cursor: pointer; border-bottom: 1px solid #f5f5f5; }
+        .menu-item:last-child { border-bottom: none; }
+        .menu-item:active { background: #f5f5f5; }
+        .menu-danger { color: #d32f2f; }
 
+        /* Context Menu (Copy/Paste) */
+        #context-menu {
+            position: absolute; background: #333; color: #fff;
+            border-radius: 8px; padding: 5px; display: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 999;
+            flex-direction: row; gap: 10px;
+        }
+        .ctx-btn {
+            background: transparent; border: none; color: #fff;
+            padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
+        }
+        .ctx-btn:active { color: #aaa; }
+        .ctx-divider { width: 1px; background: #555; height: 20px; align-self: center; }
+
+        /* Loader */
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #ffffff; z-index: 200; display: flex;
+            align-items: center; justify-content: center; color: #333;
+            flex-direction: column; gap: 10px;
+        }
     </style>
 </head>
 <body>
 
-    <!-- HEADER -->
+    <div id="loading-overlay">
+        <i class="fas fa-circle-notch fa-spin" style="font-size:30px; color:#6200ee"></i>
+        <span style="font-size:12px;">Opening File...</span>
+    </div>
+
     <div class="ide-header">
         <div class="file-info">
-            <i class="fas fa-arrow-left back-icon" onclick="history.back()"></i>
-            <span id="current-filename">index.html</span>
+            <i class="fas fa-arrow-left back-icon" onclick="window.location.href='filemanager.html?id=' + projectId"></i>
+            <div>
+                <div class="file-name" id="display-filename">...</div>
+                <div class="project-sub" id="display-projectname">Project</div>
+            </div>
         </div>
         <div class="ide-actions">
-            <button class="btn-save" onclick="saveCode()"><i class="fas fa-save"></i></button>
-            <button class="btn-run" onclick="runCode()"><i class="fas fa-play"></i> RUN</button>
+            <span class="save-status" id="saveStatus">Synced</span>
+            <button class="btn-action btn-run" onclick="runCode()"><i class="fas fa-play"></i></button>
+            <button class="btn-action" onclick="toggleMenu()"><i class="fas fa-ellipsis-v"></i></button>
+            
+            <div class="dropdown-menu" id="topMenu">
+                <div class="menu-item" onclick="renameFile()">Rename File</div>
+                <div class="menu-item" onclick="copyAll()">Copy All Code</div>
+                <div class="menu-item" onclick="formatCode()">Format Code</div>
+                <div class="menu-item menu-danger" onclick="clearCode()">Clear Content</div>
+            </div>
         </div>
     </div>
 
-    <!-- TABS -->
-    <div class="tab-bar">
-        <div class="tab active" onclick="switchTab('html')">
-            <i class="fab fa-html5 tab-icon" style="color: #e44d26;"></i> index.html
-            <div class="unsaved-dot"></div>
-        </div>
-        <div class="tab" onclick="switchTab('css')">
-            <i class="fab fa-css3-alt tab-icon" style="color: #264de4;"></i> style.css
-        </div>
-        <div class="tab" onclick="switchTab('js')">
-            <i class="fab fa-js tab-icon" style="color: #f0db4f;"></i> script.js
-        </div>
-    </div>
-
-    <!-- EDITOR -->
     <div id="editor-container">
         <div id="editor"></div>
     </div>
 
-    <!-- QUICK KEYS -->
+    <div id="context-menu">
+        <button class="ctx-btn" onclick="execCmd('selectAll')">Select All</button>
+        <div class="ctx-divider"></div>
+        <button class="ctx-btn" onclick="execCmd('copy')">Copy</button>
+        <div class="ctx-divider"></div>
+        <button class="ctx-btn" onclick="execCmd('paste')">Paste</button>
+    </div>
+
     <div class="quick-keys">
         <button class="key-btn" onclick="insertKey('<')">&lt;</button>
         <button class="key-btn" onclick="insertKey('>')">&gt;</button>
@@ -156,29 +160,32 @@
         <button class="key-btn" onclick="insertKey('id')">id</button>
     </div>
 
-    <!-- PREVIEW OVERLAY -->
-    <div id="preview-overlay">
-        <div class="preview-header">
-            <span class="preview-title">Live Preview (Pixel 5)</span>
-            <div style="display:flex; gap:15px; align-items:center;">
-                <i class="fas fa-terminal" style="color:#666; cursor:pointer;" onclick="toggleConsole()"></i>
-                <i class="fas fa-times close-preview" onclick="closePreview()"></i>
-            </div>
-        </div>
-        <iframe id="output-frame"></iframe>
-        <div id="console-drawer">
-            <div>> Gothwad Console initialized...</div>
-        </div>
-    </div>
+    <script type="module">
+        import { auth, db, doc, getDoc, updateDoc } from './firebase-config.js';
 
-    <!-- LOGIC -->
-    <script>
-        // 1. SETUP ACE EDITOR
+        // 1. SETUP & PARAMS
+        const params = new URLSearchParams(window.location.search);
+        window.projectId = params.get('id'); // Global for back button
+        const fileType = params.get('tab') || 'html';
+        const fileNames = { 'html': 'index.html', 'css': 'style.css', 'js': 'script.js' };
+
+        // 2. ACE EDITOR CONFIG
         var editor = ace.edit("editor");
-        editor.setTheme("ace/theme/monokai"); // Dark Theme
-        editor.session.setMode("ace/mode/html");
+        editor.setTheme("ace/theme/chrome"); // Clean White Theme
+        
+        let aceMode = 'html';
+        if(fileType === 'css') aceMode = 'css';
+        if(fileType === 'js') aceMode = 'javascript';
+        editor.session.setMode("ace/mode/" + aceMode);
+
         editor.setFontSize(14);
         editor.setShowPrintMargin(false);
+        
+        // --- 🔥 MAGIC FOR THIN GUTTER ---
+        editor.setOption("showFoldWidgets", false); // Hides collapse arrows (saves space)
+        editor.renderer.setPadding(0); // Removes padding
+        editor.setOption("fixedWidthGutter", true); // Optional: forces width
+        
         editor.setOptions({
             enableBasicAutocompletion: true,
             enableLiveAutocompletion: true,
@@ -186,132 +193,163 @@
             tabSize: 2
         });
 
-        // Mock Data (Real app me localStorage se aayega)
-        let files = {
-            html: `<!DOCTYPE html>
-<html>
-<head>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <h1>Hello Gothwad!</h1>
-    <p>Start coding now...</p>
-    <button onclick="msg()">Click Me</button>
+        // UI Updates
+        document.getElementById('display-filename').innerText = fileNames[fileType];
+        
+        let saveTimer = null;
+        const statusSpan = document.getElementById('saveStatus');
+        const loader = document.getElementById('loading-overlay');
+        let fullProjectData = {};
 
-    <script src="script.js"><\/script>
-</body>
-</html>`,
-            css: `body {
-    background: #121212;
-    color: #fff;
-    font-family: sans-serif;
-    text-align: center;
-    padding-top: 50px;
-}
-button {
-    padding: 10px 20px;
-    background: #bb86fc;
-    border: none;
-    color: #000;
-    font-weight: bold;
-}`,
-            js: `function msg() {
-    alert("Gothwad Studio is Awesome!");
-    console.log("Button clicked!");
-}`
+        // 3. LOAD DATA
+        async function init() {
+            if(!projectId) return alert("Error: No ID");
+
+            auth.onAuthStateChanged(async (user) => {
+                if(!user) return window.location.href = 'login.html';
+
+                try {
+                    const docRef = doc(db, "projects", projectId);
+                    const docSnap = await getDoc(docRef);
+
+                    if (docSnap.exists()) {
+                        fullProjectData = docSnap.data();
+                        document.getElementById('display-projectname').innerText = fullProjectData.name;
+
+                        let content = "";
+                        if(fileType === 'html') content = fullProjectData.html || "";
+                        if(fileType === 'css') content = fullProjectData.css || "";
+                        if(fileType === 'js') content = fullProjectData.js || "";
+
+                        editor.setValue(content, -1);
+                        loader.style.display = 'none';
+                    } else {
+                        alert("File not found!");
+                        window.location.href = 'home.html';
+                    }
+                } catch(e) {
+                    console.error(e);
+                }
+            });
+        }
+        init();
+
+        // 4. AUTO SAVE
+        editor.session.on('change', function() {
+            statusSpan.innerText = "Typing...";
+            if(saveTimer) clearTimeout(saveTimer);
+            saveTimer = setTimeout(saveToCloud, 1500); 
+        });
+
+        async function saveToCloud() {
+            statusSpan.innerText = "Saving...";
+            let newContent = editor.getValue();
+            let updatePayload = {};
+
+            if(fileType === 'html') { updatePayload.html = newContent; fullProjectData.html = newContent; }
+            if(fileType === 'css') { updatePayload.css = newContent; fullProjectData.css = newContent; }
+            if(fileType === 'js') { updatePayload.js = newContent; fullProjectData.js = newContent; }
+            
+            updatePayload.updatedAt = new Date();
+
+            try {
+                const docRef = doc(db, "projects", projectId);
+                await updateDoc(docRef, updatePayload);
+                statusSpan.innerText = "Saved";
+                statusSpan.style.color = "#2e7d32";
+                setTimeout(() => { statusSpan.style.color = "#888"; }, 2000);
+            } catch(e) {
+                statusSpan.innerText = "Error";
+                statusSpan.style.color = "red";
+            }
+        }
+
+        // --- 5. LONG PRESS CONTEXT MENU LOGIC ---
+        const contextMenu = document.getElementById('context-menu');
+        
+        // Disable default right-click
+        document.getElementById('editor').addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            // Show custom menu at click position
+            contextMenu.style.display = 'flex';
+            
+            // Adjust position to not go off screen
+            let x = e.pageX;
+            let y = e.pageY;
+            if(x + 200 > window.innerWidth) x = window.innerWidth - 210;
+            
+            contextMenu.style.left = x + 'px';
+            contextMenu.style.top = y + 'px';
+        });
+
+        // Hide menus on click elsewhere
+        document.addEventListener('click', (e) => {
+            if(!e.target.closest('#context-menu')) contextMenu.style.display = 'none';
+            if(!e.target.closest('.ide-actions')) document.getElementById('topMenu').style.display = 'none';
+        });
+
+        window.execCmd = async (cmd) => {
+            if(cmd === 'selectAll') {
+                editor.selectAll();
+            } else if(cmd === 'copy') {
+                let text = editor.getCopyText();
+                if(text) {
+                    await navigator.clipboard.writeText(text);
+                    alert("Copied to clipboard!");
+                } else {
+                    // Fallback: Copy All if nothing selected
+                    await navigator.clipboard.writeText(editor.getValue());
+                    alert("All code copied!");
+                }
+            } else if(cmd === 'paste') {
+                try {
+                    const text = await navigator.clipboard.readText();
+                    editor.insert(text);
+                } catch(err) {
+                    alert("Paste permission denied. Use keyboard.");
+                }
+            }
+            contextMenu.style.display = 'none';
+        }
+
+        // --- 6. TOP MENU ACTIONS ---
+        window.toggleMenu = () => {
+            const m = document.getElementById('topMenu');
+            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        window.renameFile = () => {
+            alert("Renaming structural files (index/style/script) is disabled in this version to prevent crash.");
+        }
+
+        window.copyAll = async () => {
+            await navigator.clipboard.writeText(editor.getValue());
+            alert("All code copied!");
+            toggleMenu();
+        }
+
+        window.formatCode = () => {
+            // Basic beautify via JSON stringify hack (or just indent)
+            // Ideally use a library, but for now just Select All
+            editor.selectAll();
+            alert("Auto-format requires plugin. Selected all for manual format.");
+            toggleMenu();
+        }
+
+        window.clearCode = () => {
+            if(confirm("Are you sure you want to delete all code?")) {
+                editor.setValue("");
+                saveToCloud();
+            }
+            toggleMenu();
+        }
+
+        window.runCode = async () => {
+            await saveToCloud();
+            window.location.href = `preview.html?id=${projectId}`;
         };
 
-        let currentMode = 'html';
-
-        // Set initial content
-        editor.setValue(files.html, -1); // -1 moves cursor to start
-
-        // 2. TAB SWITCHING
-        function switchTab(type) {
-            // Save current work to variable before switching
-            files[currentMode] = editor.getValue();
-
-            // Change Active Tab UI
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-
-            // Change Editor Mode & Content
-            currentMode = type;
-            if(type === 'html') editor.session.setMode("ace/mode/html");
-            if(type === 'css') editor.session.setMode("ace/mode/css");
-            if(type === 'js') editor.session.setMode("ace/mode/javascript");
-
-            editor.setValue(files[type], -1);
-            
-            // Update Filename in Header
-            let names = {html: 'index.html', css: 'style.css', js: 'script.js'};
-            document.getElementById('current-filename').innerText = names[type];
-        }
-
-        // 3. KEYBOARD HELPER
-        function insertKey(text) {
-            editor.insert(text);
-            editor.focus();
-        }
-
-        // 4. RUN CODE (The Magic)
-        function runCode() {
-            // Save current state
-            files[currentMode] = editor.getValue();
-
-            let html = files.html;
-            let css = "<style>" + files.css + "</style>";
-            let js = "<script>" + files.js + "<\/script>";
-
-            // Inject CSS & JS into HTML
-            // Note: Simplistic injection. For real app, use Blob URL.
-            let previewContent = html.replace('</head>', css + '</head>').replace('</body>', js + '</body>');
-
-            let iframe = document.getElementById('output-frame');
-            let doc = iframe.contentDocument || iframe.contentWindow.document;
-            
-            doc.open();
-            doc.write(previewContent);
-            doc.close();
-
-            // Override Console log in iframe to show in our drawer
-            iframe.contentWindow.console.log = function(message) {
-                let drawer = document.getElementById('console-drawer');
-                drawer.innerHTML += `<div>> ${message}</div>`;
-                drawer.scrollTop = drawer.scrollHeight;
-            }
-
-            document.getElementById('preview-overlay').style.display = 'flex';
-        }
-
-        function closePreview() {
-            document.getElementById('preview-overlay').style.display = 'none';
-        }
-
-        function toggleConsole() {
-            let drawer = document.getElementById('console-drawer');
-            drawer.style.display = drawer.style.display === 'block' ? 'none' : 'block';
-        }
-
-        // 5. SAVE (To LocalStorage)
-        function saveCode() {
-            files[currentMode] = editor.getValue();
-            // Get ID from URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const projectId = urlParams.get('id') || 'temp';
-            
-            localStorage.setItem('gothwad_code_' + projectId, JSON.stringify(files));
-            alert("Saved Locally! 💾");
-        }
-
-        // Check for Auto-Load
-        const urlParams = new URLSearchParams(window.location.search);
-        const projectId = urlParams.get('id');
-        let savedData = localStorage.getItem('gothwad_code_' + projectId);
-        if(savedData) {
-            files = JSON.parse(savedData);
-            editor.setValue(files.html, -1);
-        }
+        window.insertKey = (k) => { editor.insert(k); editor.focus(); };
 
     </script>
 </body>

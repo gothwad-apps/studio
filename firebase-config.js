@@ -11,8 +11,8 @@ import {
     createUserWithEmailAndPassword, 
     signInWithEmailAndPassword, 
     updateProfile,
-    updateEmail,      // Profile ke liye
-    updatePassword    // Profile ke liye
+    updateEmail,
+    updatePassword
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 import { 
@@ -20,14 +20,14 @@ import {
     doc, 
     setDoc, 
     getDoc, 
-    updateDoc,         // 👈 YE MISSING THA (Ab Add kar diya)
+    updateDoc,         // 👈 YE ADD KIYA HAI (Import)
     collection, 
     getDocs, 
     deleteDoc,
     addDoc,            
     onSnapshot,        
     query,             
-    where,             // Profile search ke liye
+    where,             
     orderBy,           
     serverTimestamp    
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -63,7 +63,7 @@ export {
     doc, 
     setDoc, 
     getDoc, 
-    updateDoc,         // 👈 Yahan bhi export karna zaroori hai
+    updateDoc,         // 👈 YE ADD KIYA HAI (Export)
     collection, 
     getDocs, 
     deleteDoc,

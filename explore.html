@@ -17,7 +17,7 @@
             margin: 0; padding: 0;
             display: flex; flex-direction: column;
             height: 100vh;
-            overflow: hidden; /* Main scroll body ke andar hoga */
+            overflow: hidden;
             font-family: sans-serif;
         }
 
@@ -158,41 +158,31 @@
 </head>
 <body>
 
-    <!-- 1. HEADER -->
     <header class="explore-header">
         <div class="header-title">Explore</div>
         <div class="header-actions">
-            <!-- Publish Button -->
             <a href="explorepublish.html" class="publish-btn"><i class="fas fa-plus"></i></a>
-            <!-- Settings -->
-            <a href="exploresettings.html" class="icon-btn"><i class="fas fa-cog"></i></a>
-            <!-- Profile -->
-            <a href="exploreprofile.html" class="icon-btn"><i class="fas fa-user-circle"></i></a>
+            <a href="settings.html" class="icon-btn"><i class="fas fa-cog"></i></a>
+            <a href="profile.html" class="icon-btn"><i class="fas fa-user-circle"></i></a>
         </div>
     </header>
 
-    <!-- 2. MAIN CONTENT -->
     <div class="main-scroll-area">
 
-        <!-- Search -->
         <input type="text" id="searchInput" class="search-box" placeholder="Search projects..." onkeyup="filterProjects()">
 
-        <!-- A. TEMPLATES -->
         <div class="section-label">Start with a Template</div>
         <div class="templates-wrapper">
-            <!-- Template 1 -->
             <div class="template-card tpl-bg-1" onclick="useTemplate('portfolio')">
                 <i class="fas fa-id-card tpl-icon"></i>
                 <div class="tpl-name">Portfolio</div>
                 <div class="tpl-desc">Ready to use resume site</div>
             </div>
-            <!-- Template 2 -->
             <div class="template-card tpl-bg-2" onclick="useTemplate('login')">
                 <i class="fas fa-sign-in-alt tpl-icon"></i>
                 <div class="tpl-name">Login Form</div>
                 <div class="tpl-desc">Modern glassmorphism</div>
             </div>
-            <!-- Template 3 -->
             <div class="template-card tpl-bg-3" onclick="useTemplate('game')">
                 <i class="fas fa-gamepad tpl-icon"></i>
                 <div class="tpl-name">JS Game</div>
@@ -200,7 +190,6 @@
             </div>
         </div>
 
-        <!-- B. REAL PROJECTS -->
         <div class="section-label">Community Projects</div>
         <div id="exploreList">
             <div class="loading-text"><i class="fas fa-circle-notch fa-spin"></i> Loading...</div>
@@ -208,7 +197,6 @@
 
     </div>
 
-    <!-- 3. BOTTOM NAV -->
     <nav class="bottom-nav">
         <a href="home.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
         <a href="#" class="nav-item active"><i class="fas fa-compass"></i><span>Explore</span></a>
@@ -217,16 +205,24 @@
         <a href="aichat.html" class="nav-item"><i class="fas fa-robot"></i><span>AI</span></a>
     </nav>
 
-    <!-- LOGIC -->
     <script type="module">
-        import { db, collection, getDocs, query, orderBy } from './firebase-config.js';
+        import { auth, db, collection, getDocs, query, orderBy, addDoc, serverTimestamp, onAuthStateChanged } from './firebase-config.js';
 
         const list = document.getElementById('exploreList');
         let allProjects = [];
+        let currentUser = null;
 
-        // 1. Fetch Projects
+        // Check Login
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+            }
+        });
+
+        // 1. Fetch Public Projects
         async function loadPublicProjects() {
             try {
+                // 'public_projects' collection se data layenge
                 const q = query(collection(db, "public_projects"), orderBy("createdAt", "desc"));
                 const snapshot = await getDocs(q);
                 
@@ -253,24 +249,25 @@
             }
 
             projects.forEach(p => {
-                let initial = p.authorName ? p.authorName.charAt(0).toUpperCase() : "U";
+                let initial = p.author ? p.author.charAt(0).toUpperCase() : "U";
                 
                 let div = document.createElement('div');
                 div.className = 'project-card';
+                // Store ID in button for safe cloning
                 div.innerHTML = `
                     <div class="card-header">
                         <div class="user-info">
                             <div class="user-avatar">${initial}</div>
-                            <div class="user-name">${p.authorName || "Unknown Dev"}</div>
+                            <div class="user-name">${p.author || "Unknown Dev"}</div>
                         </div>
                     </div>
-                    <div class="proj-title">${p.projectName}</div>
-                    <div class="proj-desc">${p.description || "No description."}</div>
+                    <div class="proj-title">${p.name}</div>
+                    <div class="proj-desc">${p.desc || "No description."}</div>
                     <div class="card-actions">
-                        <button class="action-btn btn-view" onclick="alert('Preview coming soon!')">
+                        <button class="action-btn btn-view" onclick="alert('Preview coming in v2!')">
                             <i class="fas fa-eye"></i> View
                         </button>
-                        <button class="action-btn btn-clone" onclick="cloneProject('${encodeURIComponent(JSON.stringify(p))}')">
+                        <button class="action-btn btn-clone" onclick="handleClone('${p.id}')">
                             <i class="fas fa-download"></i> Clone
                         </button>
                     </div>
@@ -279,65 +276,82 @@
             });
         }
 
-        // 3. Clone Logic (Works with Home.html)
-        window.cloneProject = function(projectString) {
-            if(!confirm("Download this project to your workspace?")) return;
+        // 3. Clone Logic (FIXED: Now saves to Cloud, so Home.html can see it)
+        window.handleClone = async function(id) {
+            if(!currentUser) { alert("Login required to clone!"); return; }
+            if(!confirm("Clone this project to your workspace?")) return;
+
+            // Find the project data
+            const p = allProjects.find(proj => proj.id === id);
+            if(!p) return alert("Error finding project data.");
 
             try {
-                const p = JSON.parse(decodeURIComponent(projectString));
-                let localProjects = JSON.parse(localStorage.getItem('gothwad_projects')) || [];
-                
-                let newProject = {
-                    id: Date.now(),
-                    name: p.projectName + " (Clone)",
-                    date: new Date().toISOString(),
-                    html: p.html || "<h1>Cloned Project</h1>",
+                // Saving to user's 'projects' collection
+                await addDoc(collection(db, "projects"), {
+                    name: p.name + " (Clone)",
+                    type: p.type || "HTML",
+                    html: p.html || "",
                     css: p.css || "",
-                    js: p.js || ""
-                };
-
-                localProjects.push(newProject);
-                localStorage.setItem('gothwad_projects', JSON.stringify(localProjects));
+                    js: p.js || "",
+                    uid: currentUser.uid, // Assign to current user
+                    author: currentUser.displayName,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
 
                 alert("Project Cloned! Check Home tab.");
                 window.location.href = "home.html";
-            } catch(e) { console.error(e); alert("Error cloning."); }
+            } catch(e) { 
+                console.error(e); 
+                alert("Error cloning: " + e.message); 
+            }
         }
 
-        // 4. Template Logic (Hardcoded Templates)
-        window.useTemplate = function(type) {
-            if(!confirm("Create new project from this template?")) return;
+        // 4. Template Logic (FIXED: Now saves to Cloud)
+        window.useTemplate = async function(type) {
+            if(!currentUser) { alert("Login required!"); return; }
+            if(!confirm("Create new project from template?")) return;
             
             let html = "", css = "", js = "";
+            let name = "New Project";
 
             if(type === 'portfolio') {
+                name = "My Portfolio";
                 html = "<h1>My Portfolio</h1><p>Welcome to my site.</p>";
                 css = "body { background: #f0f0f0; font-family: sans-serif; } h1 { color: #333; }";
             } else if(type === 'login') {
+                name = "Login Form";
                 html = "<input type='text' placeholder='User'><br><input type='password' placeholder='Pass'><br><button>Login</button>";
                 css = "input { padding: 10px; margin: 5px; } button { background: blue; color: white; }";
             } else if(type === 'game') {
+                name = "JS Game";
                 html = "<canvas id='game'></canvas>";
                 js = "console.log('Game Started');";
             }
 
-            let localProjects = JSON.parse(localStorage.getItem('gothwad_projects')) || [];
-            localProjects.push({
-                id: Date.now(),
-                name: type.charAt(0).toUpperCase() + type.slice(1) + " Template",
-                date: new Date().toISOString(),
-                html: html, css: css, js: js
-            });
-            localStorage.setItem('gothwad_projects', JSON.stringify(localProjects));
-            window.location.href = "home.html";
+            try {
+                await addDoc(collection(db, "projects"), {
+                    name: name,
+                    type: "HTML",
+                    html: html, css: css, js: js,
+                    uid: currentUser.uid,
+                    author: currentUser.displayName,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
+                window.location.href = "home.html";
+            } catch(e) {
+                console.error(e);
+                alert("Error creating template: " + e.message);
+            }
         }
 
         // 5. Search Filter
         window.filterProjects = function() {
             let q = document.getElementById('searchInput').value.toLowerCase();
             let filtered = allProjects.filter(p => 
-                (p.projectName && p.projectName.toLowerCase().includes(q)) || 
-                (p.authorName && p.authorName.toLowerCase().includes(q))
+                (p.name && p.name.toLowerCase().includes(q)) || 
+                (p.author && p.author.toLowerCase().includes(q))
             );
             renderProjects(filtered);
         }
