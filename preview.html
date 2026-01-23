@@ -2,212 +2,144 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Live Preview</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* --- ENVIRONMENT --- */
         * { box-sizing: border-box; }
         body {
             margin: 0; padding: 0;
-            background-color: #f0f4f8;
+            background-color: #e0e0e0;
             height: 100vh;
             display: flex; flex-direction: column;
             font-family: 'Roboto', sans-serif;
             overflow: hidden;
         }
 
-        /* 1. TOP MAIN HEADER (Fixed Layout) */
+        /* --- HEADER --- */
         .main-header {
-            width: 100%; height: 55px;
-            background: #fff;
-            border-bottom: 1px solid #ddd;
+            height: 60px; background: #fff; border-bottom: 1px solid #ccc;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 15px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-            z-index: 100; 
-            flex-shrink: 0; /* Header won't shrink */
-        }
-
-        .header-left { 
-            display: flex; align-items: center; gap: 10px; 
-            overflow: hidden; /* Prevent text overflow */
-            flex: 1;
-        }
-        
-        .back-btn-main { 
-            font-size: 18px; color: #555; cursor: pointer; padding: 8px; 
-            border-radius: 50%; transition: 0.2s;
-        }
-        .back-btn-main:active { background: #eee; }
-
-        .project-title { 
-            font-size: 16px; font-weight: 700; color: #333; 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        
-        /* TERMINAL BUTTON (Fixed Right Side) */
-        .header-right { flex-shrink: 0; }
-        
-        .header-btn {
-            padding: 8px 14px;
-            background: #202124; /* Dark Button for contrast */
-            color: #fff;
-            border-radius: 8px;
-            font-size: 12px; font-weight: 600;
-            cursor: pointer;
-            display: flex; align-items: center; gap: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            transition: 0.2s;
-        }
-        .header-btn:active { transform: scale(0.95); }
-        .header-btn i { color: #00e676; font-size: 14px; } 
-
-        /* 2. PREVIEW AREA */
-        .preview-area {
-            flex: 1; width: 100%;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            padding: 10px 0;
-            overflow: hidden;
-        }
-
-        /* PHONE CONTAINER */
-        .phone-mockup {
-            width: 280px; 
-            height: 570px; 
-            background: #3c4043;
-            border-radius: 24px;
+            padding: 0 15px; flex-shrink: 0; z-index: 100;
             position: relative;
-            box-shadow: 
-                0 0 0 2px #5f6368, 
-                0 20px 40px rgba(0,0,0,0.3);
-            padding: 8px;
-            z-index: 10;
         }
 
-        .btn-physical {
-            position: absolute; background: #202124;
-            width: 3px; border-radius: 0 2px 2px 0;
-            right: -3px; z-index: 5;
-        }
-        .btn-power { top: 90px; height: 35px; background: #888; } 
-        .btn-vol { top: 140px; height: 60px; }
+        .header-left { display: flex; align-items: center; gap: 10px; z-index: 2; }
+        .back-btn-main { font-size: 20px; color: #333; cursor: pointer; }
+        .project-title { font-weight: bold; font-size: 14px; max-width: 80px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;}
 
+        /* BRANDING CENTER */
+        .header-brand {
+            position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+            text-align: center; z-index: 1;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        .brand-main { font-size: 14px; font-weight: 800; color: #222; letter-spacing: 0.5px; }
+        .brand-sub { font-size: 9px; color: #888; font-weight: 500; margin-top: 2px; }
+
+        .header-right { z-index: 2; }
+        .term-btn { 
+            background: #202124; color: #00e676; 
+            padding: 6px 12px; border-radius: 6px; 
+            font-size: 12px; font-family: monospace; font-weight: bold;
+            cursor: pointer; display: flex; align-items: center; gap: 5px;
+        }
+
+        /* --- PREVIEW AREA --- */
+        .preview-area {
+            flex: 1; display: flex; justify-content: center; align-items: center;
+            overflow: hidden; padding: 10px;
+            background: #f0f2f5;
+        }
+
+        /* --- PHONE MOCKUP --- */
+        .phone-mockup {
+            width: 360px; /* Standard Width */
+            height: 780px; /* Standard Height */
+            background: #121212;
+            border-radius: 45px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.4);
+            padding: 12px; /* Bezel */
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        /* Responsive Resize */
+        @media (max-height: 850px) { .phone-mockup { transform: scale(0.9); } }
+        @media (max-height: 750px) { .phone-mockup { transform: scale(0.8); } }
+        @media (max-width: 380px) { .phone-mockup { transform: scale(0.85); } }
+
+        /* Buttons */
+        .btn-side { position: absolute; right: -3px; background: #222; width: 4px; border-radius: 0 4px 4px 0; }
+        .btn-power { top: 130px; height: 50px; }
+        .btn-vol { top: 200px; height: 90px; }
+
+        /* Screen */
         .screen {
             width: 100%; height: 100%;
-            background: #000;
-            border-radius: 18px;
+            background: #fff;
+            border-radius: 35px;
             overflow: hidden;
+            display: flex; flex-direction: column;
             position: relative;
-            display: flex; flex-direction: column;
         }
 
-        /* PHONE STATUS BAR */
+        /* 1. STATUS BAR */
         .status-bar {
-            height: 25px; width: 100%;
+            height: 30px; width: 100%; background: #fff;
             display: flex; align-items: center; justify-content: space-between;
-            padding: 0 12px; font-size: 10px; font-weight: 600; color: #fff;
-            position: absolute; top: 0; left: 0; z-index: 60;
+            padding: 0 20px; font-size: 12px; font-weight: 600; color: #000;
+            flex-shrink: 0; z-index: 20;
+            border-bottom: 1px solid #f5f5f5;
         }
-        
-        .punch-hole {
-            position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
-            width: 10px; height: 10px;
-            background: #000; border-radius: 50%;
-            z-index: 70;
-            box-shadow: 0 0 0 1px #222;
-        }
+        .punch-hole { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); width: 12px; height: 12px; background: #000; border-radius: 50%; z-index: 50; }
 
-        /* LAUNCHER */
-        #launcher-screen {
+        /* 2. APP WINDOW (SCALED CONTENT) */
+        .app-window {
             flex: 1; width: 100%;
-            background: url('https://images.unsplash.com/photo-1620121692029-d088224ddc74?q=80&w=1000&auto=format&fit=crop') center/cover;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: space-between;
-            padding: 50px 15px 15px 15px;
-            position: relative; z-index: 40;
+            position: relative;
+            background: #fff;
+            overflow: hidden;
         }
 
-        .launcher-top-text {
-            font-size: 18px; font-weight: 700; color: #fff;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.4);
+        /* --- THE MAGIC SCALING --- */
+        /* Container width is ~336px. We render content at 125% (420px) and shrink it back. */
+        /* This makes text look smaller and sharper (High DPI effect) */
+        #app-frame {
+            width: 125%; 
+            height: 125%;
+            border: none;
+            background: #fff;
+            transform: scale(0.8); /* Shrink back to fit */
+            transform-origin: 0 0;
+            position: absolute; top: 0; left: 0;
         }
 
-        .launcher-center { display: flex; flex-direction: column; align-items: center; }
-
-        .app-icon-btn {
-            width: 65px; height: 65px;
-            background: linear-gradient(145deg, rgba(255,255,255,0.25), rgba(255,255,255,0.1));
-            backdrop-filter: blur(15px);
-            border-radius: 18px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 24px; color: #fff;
-            cursor: pointer;
-            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.2);
-            transition: transform 0.1s;
-        }
-        .app-icon-btn:active { transform: scale(0.95); }
-        
-        .app-label {
-            color: #fff; font-size: 11px; margin-top: 6px; font-weight: 500;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.6);
-        }
-
-        .launcher-bottom-text {
-            font-size: 9px; color: rgba(255,255,255,0.8); letter-spacing: 0.5px;
-        }
-
-        /* LOADER */
-        #loader {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #fff; z-index: 45;
-            display: none; align-items: center; justify-content: center;
-            color: #333; flex-direction: column;
-        }
-        .g-char { font-size: 32px; font-weight: bold; display: inline-block; }
-
-        /* IFRAME */
-        iframe {
-            width: 100%; flex: 1; border: none; background: #fff;
-            display: none; z-index: 30;
-            padding-top: 25px;
-        }
-
-        /* PHONE FOOTER */
+        /* 3. NAVIGATION */
         .nav-bar {
-            height: 35px; width: 100%;
-            background: #000;
-            display: flex; align-items: center; justify-content: space-around;
-            padding-bottom: 2px; color: #ccc; z-index: 100;
-            border-top: 1px solid #222;
+            height: 25px; width: 100%; background: #fff;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; border-top: 1px solid #eee;
         }
-        .nav-btn { padding: 5px 15px; cursor: pointer; transition: 0.2s; }
-        .nav-btn:active { color: #fff; transform: scale(0.9); }
-        .nav-icon { font-size: 14px; }
+        .home-indicator { width: 120px; height: 4px; background: #ddd; border-radius: 2px; }
 
-        /* BRANDING */
-        .brand-text { margin-top: 10px; text-align: center; }
-        .phone-model { font-size: 14px; font-weight: 700; color: #333; }
-        .gothwad-sub { font-size: 10px; color: #5f6368; font-weight: 500; margin-top: 2px; }
+        /* UTILS */
+        #loader { position: absolute; inset:0; background:#fff; display:flex; align-items:center; justify-content:center; z-index:15; flex-direction: column; }
+        .g-logo { font-size:30px; font-weight:bold; letter-spacing:-2px; animation: pulse 1s infinite alternate; }
+        @keyframes pulse { from { opacity: 0.6; } to { opacity: 1; } }
 
-        /* TERMINAL WINDOW (Positioned Below Header) */
-        .terminal-window {
-            position: fixed; 
-            top: 60px; /* Just below header */
-            right: 15px;
-            width: 300px; height: 200px;
-            background: rgba(32, 33, 36, 0.95); border-radius: 8px;
-            display: none; flex-direction: column; z-index: 200;
-            font-family: monospace; border: 1px solid #5f6368;
-            color: #8ab4f8; font-size: 10px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        #launcher-screen { position: absolute; inset:0; background:#fff; display:flex; align-items:center; justify-content:center; flex-direction:column; z-index:10; }
+        .app-icon { width:65px; height:65px; background:linear-gradient(135deg, #6200ea, #aa00ff); border-radius:18px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:28px; cursor:pointer; box-shadow: 0 5px 15px rgba(98, 0, 234, 0.3); }
+        
+        .terminal { 
+            position:fixed; top:65px; right:10px; 
+            width:320px; height:220px; 
+            background:rgba(20,20,20,0.95); color:#00ff00; 
+            padding:10px; font-size:11px; font-family:'Courier New', monospace;
+            display:none; border-radius:8px; overflow-y:auto; z-index:200; border:1px solid #444;
         }
-        .term-head { background: #3c4043; padding: 6px 10px; display: flex; justify-content: space-between; color: #fff; }
-        .term-body { flex: 1; padding: 8px; overflow-y: auto; }
 
     </style>
 </head>
@@ -216,84 +148,70 @@
     <div class="main-header">
         <div class="header-left">
             <i class="fas fa-arrow-left back-btn-main" onclick="history.back()"></i>
-            <div class="project-title" id="page-title">Loading...</div>
+            <span class="project-title" id="page-title">Loading...</span>
         </div>
         
+        <div class="header-brand">
+            <div class="brand-main">Google Pixel 8 Pro</div>
+            <div class="brand-sub">Powered By Gothwad Apps Pvt. Ltd.</div>
+        </div>
+
         <div class="header-right">
-            <div class="header-btn" onclick="toggleTerm()">
-                <i class="fas fa-terminal"></i> Console
+            <div class="term-btn" onclick="toggleTerm()">
+                <i class="fas fa-terminal"></i> TERM
             </div>
         </div>
     </div>
 
     <div class="preview-area">
         <div class="phone-mockup">
-            <div class="btn-physical btn-power"></div>
-            <div class="btn-physical btn-vol"></div>
+            <div class="btn-side btn-power"></div>
+            <div class="btn-side btn-vol"></div>
 
             <div class="screen">
                 <div class="status-bar">
-                    <div id="clock">10:00</div>
+                    <span id="clock">12:00</span>
                     <div class="punch-hole"></div>
-                    <div style="display:flex; gap:5px;">
-                        <i class="fas fa-signal" style="font-size:10px;"></i>
-                        <i class="fas fa-wifi" style="font-size:10px;"></i>
-                        <i class="fas fa-battery-three-quarters" style="font-size:10px;"></i>
-                    </div>
+                    <span style="display:flex; gap:6px; font-size:10px;">
+                        <i class="fas fa-signal"></i> <i class="fas fa-wifi"></i> <i class="fas fa-battery-full"></i>
+                    </span>
                 </div>
 
-                <div id="launcher-screen">
-                    <div class="launcher-top-text">Gothwad OS</div>
-                    <div class="launcher-center">
-                        <div class="app-icon-btn" onclick="launchApp()">
-                            <i class="fas fa-play"></i>
+                <div class="app-window">
+                    <iframe id="app-frame" style="display:none;"></iframe>
+                    
+                    <div id="loader" style="display:none;">
+                        <div class="g-logo">
+                            <span style="color:#4285f4">G</span><span style="color:#ea4335">o</span><span style="color:#fbbc05">o</span><span style="color:#4285f4">g</span><span style="color:#34a853">l</span><span style="color:#ea4335">e</span>
                         </div>
-                        <div class="app-label">Run App</div>
                     </div>
-                    <div class="launcher-bottom-text">Powered by Gothwad Apps</div>
-                </div>
-
-                <div id="loader">
-                    <div>
-                        <span class="g-char" style="color:#4285F4">G</span>
-                        <span class="g-char" style="color:#EA4335">o</span>
-                        <span class="g-char" style="color:#FBBC05">o</span>
-                        <span class="g-char" style="color:#4285F4">g</span>
-                        <span class="g-char" style="color:#34A853">l</span>
-                        <span class="g-char" style="color:#EA4335">e</span>
+                    
+                    <div id="launcher-screen">
+                        <div class="app-icon" onclick="launchApp()"><i class="fas fa-play"></i></div>
+                        <p style="margin-top:10px; font-size:12px; color:#555; font-weight:600;">Run Project</p>
                     </div>
-                    <div style="font-size:10px; color:#555; margin-top:8px;">Powered by Android</div>
                 </div>
-
-                <iframe id="app-frame"></iframe>
 
                 <div class="nav-bar">
-                    <div class="nav-btn" onclick="history.back()"><i class="fas fa-chevron-left nav-icon"></i></div>
-                    <div class="nav-btn" onclick="goHome()"><i class="far fa-circle nav-icon"></i></div>
-                    <div class="nav-btn" onclick="showRecents()"><i class="far fa-square nav-icon"></i></div>
+                    <div class="home-indicator" onclick="goHome()"></div>
                 </div>
             </div>
         </div>
-
-        <div class="brand-text">
-            <div class="phone-model">Google Pixel 8</div>
-            <div class="gothwad-sub">Powered by Gothwad Apps Pvt. Ltd.</div>
-        </div>
     </div>
 
-    <div class="terminal-window" id="termWin">
-        <div class="term-head"><span>LOGCAT</span> <span style="cursor:pointer;" onclick="document.getElementById('termLogs').innerHTML=''">CLEAR</span></div>
-        <div class="term-body" id="termLogs"><div>D/System: Ready...</div></div>
+    <div class="terminal" id="termWin">
+        <div style="border-bottom:1px solid #333; padding-bottom:5px; margin-bottom:5px; display:flex; justify-content:space-between;">
+            <span>TERMINAL</span> <span style="cursor:pointer; color:red;" onclick="document.getElementById('logs').innerHTML=''">[CLEAR]</span>
+        </div>
+        <div id="logs"></div>
     </div>
 
     <script type="module">
         import { db, doc, getDoc } from './firebase-config.js';
-
         const projectId = new URLSearchParams(window.location.search).get('id');
         const frame = document.getElementById('app-frame');
         const loader = document.getElementById('loader');
         const launcher = document.getElementById('launcher-screen');
-        const statusBar = document.querySelector('.status-bar');
         const titleEl = document.getElementById('page-title');
 
         setInterval(() => {
@@ -302,88 +220,45 @@
         }, 1000);
 
         let appContent = "";
-        
-        async function prepareSystem() {
-            if(!projectId) return log("E/Core: No ID Found", true);
+
+        async function init() {
+            if(!projectId) return log("Error: No Project ID");
             try {
-                const docRef = doc(db, "projects", projectId);
-                const docSnap = await getDoc(docRef);
-                if(docSnap.exists()) {
-                    const data = docSnap.data();
+                const snap = await getDoc(doc(db, "projects", projectId));
+                if(snap.exists()) {
+                    const data = snap.data();
                     titleEl.innerText = data.name;
-                    log(`I/Loader: Loaded ${data.name}`);
+                    log(`System: Loaded ${data.name}`);
                     
                     appContent = `
                         <!DOCTYPE html>
-                        <html>
-                        <head>
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-                            <style>body{margin:0; overflow-x:hidden;} ${data.css}</style>
-                            <script>
-                                window.onerror = function(m,u,l){window.parent.postMessage({t:'err', m:m+' (Line '+l+')'},'*')};
-                                console.log = function(m){window.parent.postMessage({t:'log', m:m},'*')};
-                            <\/script>
-                        </head>
-                        <body>${data.html}<script>${data.js}<\/script></body>
-                        </html>
-                    `;
-                } else {
-                    titleEl.innerText = "Error";
-                    log("E/Loader: Project not found", true);
+                        <html><head>
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <style>body{margin:0; font-family:sans-serif;} ${data.css}</style>
+                        <script>
+                            window.onerror=function(m){window.parent.postMessage({t:'err',m:m},'*')};
+                            console.log=function(m){window.parent.postMessage({t:'log',m:m},'*')};
+                        <\/script>
+                        </head><body>${data.html}<script>${data.js}<\/script></body></html>`;
                 }
-            } catch(e) { 
-                titleEl.innerText = "Error";
-                log("E/System: " + e.message, true); 
-            }
+            } catch(e) { log("Error: " + e.message, true); }
         }
-        prepareSystem();
+        init();
 
-        window.launchApp = function() {
-            if(!appContent) return alert("System initializing...");
-            
-            launcher.style.display = 'none';
-            loader.style.display = 'flex';
-            statusBar.style.color = '#333';
-
-            setTimeout(() => {
-                frame.srcdoc = appContent;
-                frame.style.display = 'block';
-                loader.style.display = 'none';
-                statusBar.style.color = '#000';
-                log("I/Activity: App Started");
-            }, 1200);
+        window.launchApp = () => {
+            if(!appContent) return alert("Loading...");
+            launcher.style.display='none'; loader.style.display='flex';
+            setTimeout(() => { loader.style.display='none'; frame.srcdoc = appContent; frame.style.display='block'; log("System: Activity Started"); }, 800);
         };
 
-        window.goHome = function() {
-            frame.style.display = 'none';
-            frame.srcdoc = "";
-            launcher.style.display = 'flex';
-            statusBar.style.color = '#fff';
-            log("I/System: Home");
+        window.goHome = () => { frame.style.display='none'; launcher.style.display='flex'; log("System: Home"); };
+        
+        window.log = (m, err) => { 
+            const d=document.createElement('div'); d.innerText='> '+m; if(err)d.style.color='red'; 
+            document.getElementById('logs').prepend(d); 
         };
-
-        window.showRecents = function() {
-            log("I/System: Recent Apps clicked");
-        };
-
-        window.log = (msg, err) => {
-            const d = document.createElement('div');
-            d.innerText = msg;
-            if(err) d.style.color = "#ff6b6b";
-            const box = document.getElementById('termLogs');
-            box.append(d);
-            box.scrollTop = box.scrollHeight;
-        };
-
-        window.toggleTerm = () => {
-            const w = document.getElementById('termWin');
-            w.style.display = w.style.display==='flex'?'none':'flex';
-        };
-
-        window.addEventListener('message', e => {
-            if(e.data.t==='log') log("D/App: " + e.data.m);
-            if(e.data.t==='err') log("E/App: " + e.data.m, true);
-        });
+        window.toggleTerm = () => { const t=document.getElementById('termWin'); t.style.display = t.style.display==='block'?'none':'block'; };
+        window.addEventListener('message', e => { if(e.data.t==='log') log(e.data.m); if(e.data.t==='err') log(e.data.m, true); });
     </script>
 </body>
 </html>

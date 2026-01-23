@@ -3,194 +3,618 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gothwad File Manager</title>
+    <title>File Manager</title>
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* --- PRO UI --- */
+        /* --- CLEAN THEME --- */
+        :root { --primary: #6200ea; --bg-color: #f5f5f5; --surface-color: #ffffff; --text-main: #333; --text-sub: #666; --border: #e0e0e0; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            background-color: var(--bg-color); padding: 0; margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+        
+        body { 
+            background-color: #f5f5f5; color: #333; margin: 0; padding: 0; 
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            display: flex; flex-direction: column; height: 100vh;
+            padding-bottom: 60px;
         }
 
-        .top-panel { padding: 15px 20px; background: var(--surface-color); border-bottom: 1px solid var(--border); z-index: 10; }
-        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .proj-name { font-size: 18px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
-        .back-btn { font-size: 20px; color: var(--text-sub); cursor: pointer; }
+        .fab { display: none !important; } 
         
-        .storage-track { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; display: flex; }
-        .storage-fill { height: 100%; background: var(--primary); width: 35%; }
-        .storage-label { font-size: 10px; color: var(--text-sub); margin-top: 5px; display: flex; justify-content: space-between; }
+        /* HEADER */
+        .fm-header { height: 50px; background: #fff; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 10; }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .back-btn { font-size: 18px; color: #555; cursor: pointer; }
+        .project-name { font-size: 16px; font-weight: 700; color: #333; display: flex; align-items: center; gap: 8px; }
+        .sync-status { font-size: 10px; color: #999; font-weight: 500; }
+        .header-actions { display: flex; gap: 15px; }
+        .action-icon-btn { font-size: 18px; color: #555; cursor: pointer; text-decoration: none; }
 
-        .action-container { padding: 15px 20px 5px 20px; }
-        .grid-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        /* ACTION GRID */
+        .action-grid { padding: 10px 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f5f5f5; }
+        .grid-btn { background: #fff; border-radius: 10px; padding: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80px; cursor: pointer; border: 1px solid #e0e0e0; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+        .grid-btn:active { transform: scale(0.97); background: #fafafa; }
         
-        .btn-card { 
-            padding: 15px; border-radius: 12px; color: #fff; position: relative; 
-            overflow: hidden; cursor: pointer; height: 90px; 
-            display: flex; flex-direction: column; justify-content: center; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+        .btn-ai { background: #f3e5f5; border-color: #e1bee7; color: #7b1fa2; }
+        .btn-term { background: #e3f2fd; border-color: #bbdefb; color: #1565c0; } 
+        .btn-git { background: #fff3e0; border-color: #ffe0b2; color: #e65100; }
+        .btn-apk { background: #e0f2f1; border-color: #b2dfdb; color: #00897b; }
+
+        .grid-icon { font-size: 22px; margin-bottom: 5px; }
+        .btn-label { font-size: 11px; font-weight: 700; uppercase; text-align: center; }
+
+        /* PATH & CONTROLS */
+        .path-bar { background: #fff; padding: 8px 15px; border-top: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0; font-size: 13px; font-weight: 600; color: #555; display: flex; align-items: center; gap: 5px; overflow-x: auto; white-space: nowrap; }
+        .path-segment { cursor: pointer; color: #1967d2; }
+        .path-sep { color: #999; font-size: 10px; }
+        
+        .file-controls { background: #fff; padding: 8px 15px; border-bottom: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; height: 50px; }
+        .control-title { font-size: 12px; font-weight: 700; color: #666; text-transform: uppercase; }
+        .control-actions { display: flex; gap: 8px; align-items: center; }
+        .ctrl-btn { font-size: 14px; color: #555; cursor: pointer; background: #f1f3f4; width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; border: 1px solid #ddd; }
+        
+        .paste-btn { background: #e8f0fe; color: #1967d2; border-color: #b3d7ff; font-weight: 600; width: auto; padding: 0 12px; font-size: 12px; }
+        .cancel-btn { background: #fce8e6; color: #d32f2f; border-color: #fadbd8; }
+
+        /* FILE LIST */
+        .file-list-container { flex: 1; overflow-y: auto; background: #fff; padding-bottom: 90px; }
+        .file-row { display: flex; align-items: center; padding: 10px 15px; border-bottom: 1px solid #f5f5f5; position: relative; }
+        .row-click-area { flex: 1; display: flex; align-items: center; cursor: pointer; }
+        .icon-box { width: 30px; display: flex; justify-content: center; margin-right: 12px; font-size: 20px; }
+        .simple-file { color: #5f6368; } .simple-folder { color: #fbc02d; } .simple-img { color: #5f6368; } .simple-back { color: #1967d2; }
+        .file-info { flex: 1; } .file-name { font-size: 14px; color: #333; font-weight: 500; } .file-meta { font-size: 10px; color: #999; }
+        .file-menu-btn { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; color: #888; cursor: pointer; border-radius: 50%; }
+
+        /* CONTEXT MENU */
+        .context-menu { position: absolute; right: 40px; top: 10px; background: #fff; border: 1px solid #ddd; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border-radius: 8px; width: 140px; display: none; z-index: 100; }
+        .ctx-item { padding: 10px 15px; font-size: 13px; color: #333; cursor: pointer; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #f9f9f9; }
+        .ctx-del { color: #d32f2f; }
+
+        .fab-run {
+            position: fixed; bottom: 80px; right: 20px;
+            width: 56px; height: 56px; background: #00e676; 
+            color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 22px; box-shadow: 0 4px 10px rgba(0,230,118,0.4); border: none; cursor: pointer; z-index: 90;
+            transition: transform 0.2s;
         }
-        .btn-card:active { transform: scale(0.98); }
+        .fab-run:active { transform: scale(0.9); }
+        .fab-run i { margin-left: 4px; }
 
-        /* COLORS */
-        .bg-run { background: linear-gradient(135deg, #00c853, #64dd17); } /* Green for Run */
-        .bg-apk { background: linear-gradient(135deg, #e65100, #ff9800); } /* Orange for APK */
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            height: 60px; background: #fff;
+            display: flex; justify-content: space-around; align-items: center;
+            border-top: 1px solid #e0e0e0;
+            z-index: 95;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+        }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #999; text-decoration: none; height: 100%; cursor: pointer; }
+        .nav-item i { font-size: 20px; margin-bottom: 4px; }
+        .nav-item span { font-size: 10px; font-weight: 500; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item:active { background-color: #f9f9f9; }
 
-        .card-icon { font-size: 24px; margin-bottom: 8px; }
-        .card-lbl { font-size: 14px; font-weight: 700; }
-
-        .add-bar { background: linear-gradient(135deg, #1565c0, #42a5f5); padding: 12px 20px; border-radius: 12px; color: white; display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3); }
-
-        .tools-row { padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .breadcrumb { font-size: 14px; color: var(--text-sub); font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; }
-        .breadcrumb span { color: var(--primary); font-weight: bold; }
-        .tool-actions i { font-size: 16px; color: var(--text-main); margin-left: 18px; cursor: pointer; }
-
-        .file-list-area { flex: 1; background: var(--surface-color); border-top-left-radius: 25px; border-top-right-radius: 25px; padding: 10px 0; overflow-y: auto; box-shadow: 0 -5px 20px rgba(0,0,0,0.1); }
+        /* MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 200; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+        .modal-box { background: #fff; width: 85%; max-width: 320px; border-radius: 12px; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: popUp 0.2s ease-out; }
+        .modal-header { font-size: 16px; font-weight: 700; margin-bottom: 15px; color: #333; }
+        .modal-input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; margin-bottom: 15px; outline: none; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+        .btn-modal { padding: 8px 16px; border-radius: 6px; font-size:12px; font-weight: 600; cursor: pointer; border: none; }
+        .btn-cancel { background: #f1f3f4; color: #333; } .btn-create { background: #2196f3; color: #fff; }
         
-        .file-item { display: flex; align-items: center; padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); animation: fadeInItem 0.3s forwards; opacity: 0; cursor: pointer; }
-        .file-item:active { background: rgba(255,255,255,0.05); }
+        .choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .choice-card { background: #f5f5f5; border: 1px solid #eee; padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; }
         
-        .f-icon-box { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-right: 15px; background: rgba(255,255,255,0.05); border-radius: 10px; }
-        .f-details { flex: 1; }
-        .f-title { font-size: 15px; font-weight: 500; color: var(--text-main); margin-bottom: 3px; }
-        .f-meta { font-size: 11px; color: var(--text-sub); }
-        .f-more { color: var(--text-sub); padding: 10px; font-size: 16px; cursor: pointer; }
+        .io-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .io-card { background: #f8f9fa; border: 1px solid #eee; padding: 20px; border-radius: 10px; text-align: center; cursor: pointer; transition: 0.2s; }
+        .io-card:active { background: #e3f2fd; border-color: #2196f3; }
+        .io-icon { font-size: 24px; margin-bottom: 8px; color: #6200ea; }
+        .io-text { font-size: 14px; font-weight: 600; color: #333; }
 
-        /* Loader */
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 999; display: flex; justify-content: center; align-items: center; color: var(--primary); }
+        .ext-list { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+        .ext-chip { padding: 4px 10px; background: #eee; border-radius: 15px; font-size: 11px; font-weight: 600; color: #555; cursor: pointer; border: 1px solid transparent; }
+        .ext-chip.selected { background: #e8f0fe; color: #1967d2; border-color: #1967d2; }
         
-        /* Toast */
-        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 10px 20px; border-radius: 30px; font-size: 12px; z-index: 600; display: none; }
-
-        @keyframes fadeInItem { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        #importInput { display: none; }
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: flex; justify-content: center; align-items: center; z-index: 100; }
+        @keyframes popUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <div id="loading-overlay"><i class="fas fa-circle-notch fa-spin fa-2x"></i></div>
+    <div id="loader"><i class="fas fa-circle-notch fa-spin" style="color:#6200ee; font-size:30px;"></i></div>
 
-    <div class="top-panel">
-        <div class="header-row">
+    <header class="fm-header">
+        <div class="header-left">
             <i class="fas fa-arrow-left back-btn" onclick="window.location.href='home.html'"></i>
-            <div class="proj-name"><i class="fas fa-cube" style="color:var(--primary)"></i> <span id="p-title">Loading...</span></div>
-            <i class="fas fa-cog back-btn"></i>
-        </div>
-        <div class="storage-track"><div class="storage-fill"></div></div>
-        <div class="storage-label"><span>Cloud Storage</span><span>Active</span></div>
-    </div>
-
-    <div class="action-container">
-        <div class="grid-buttons">
-            <div class="btn-card bg-run" onclick="runFullProject()">
-                <i class="fas fa-play-circle card-icon"></i>
-                <div class="card-lbl">Run Project</div>
-            </div>
-            <div class="btn-card bg-apk" onclick="showToast('🤖 APK Server Offline')">
-                <i class="fab fa-android card-icon"></i>
-                <div class="card-lbl">Build APK</div>
+            <div class="project-name">
+                <span id="p-title">Project</span>
+                <span class="sync-status" id="sync-status"></span>
             </div>
         </div>
-        
-        <div class="add-bar" onclick="showToast('File Creation Locked in v1')">
-            <span><i class="fas fa-plus-circle"></i> Create New File</span>
-            <i class="fas fa-arrow-right"></i>
+        <div class="header-actions">
+            <a href="terminal.html" class="action-icon-btn"><i class="fas fa-terminal"></i></a>
+            <a href="explorepublish.html" class="action-icon-btn"><i class="fas fa-cloud-upload-alt"></i></a>
+            <a href="filemanagersettings.html" class="action-icon-btn"><i class="fas fa-cog"></i></a>
+        </div>
+    </header>
+
+    <div class="action-grid">
+        <div class="grid-btn btn-ai" onclick="window.location.href='aichat.html'">
+            <i class="fas fa-magic grid-icon"></i><span class="btn-label">AI Vibe Coding</span>
+        </div>
+        <div class="grid-btn btn-term" onclick="openIOModal()">
+            <i class="fas fa-file-import grid-icon"></i><span class="btn-label">Import / Export</span>
+        </div>
+        <div class="grid-btn btn-git" onclick="window.open('https://github.com', '_blank')">
+            <span class="btn-label" style="font-size:12px;">Upload Github</span>
+        </div>
+        <div class="grid-btn btn-apk" onclick="window.location.href='buildapk.html'">
+            <i class="fab fa-android grid-icon"></i><span class="btn-label">Build APK</span>
         </div>
     </div>
 
-    <div class="tools-row">
-        <div class="breadcrumb">root / src /</div>
-        <div class="tool-actions"><i class="fas fa-sync-alt" onclick="location.reload()"></i></div>
+    <div class="path-bar" id="path-bar"><span class="path-segment" onclick="navigateRoot()">Home</span></div>
+
+    <div class="file-controls">
+        <span class="control-title" id="ctrl-title">FILES</span>
+        <div class="control-actions" id="std-actions">
+            <div class="ctrl-btn" onclick="openModal('step1')"><i class="fas fa-plus"></i></div>
+            <div class="ctrl-btn" onclick="document.getElementById('importInput').click()"><i class="fas fa-file-import"></i></div>
+        </div>
+        <div class="control-actions" id="paste-actions" style="display:none;">
+            <div class="ctrl-btn paste-btn" id="paste-btn-text" onclick="executePaste()">Paste Here</div>
+            <div class="ctrl-btn cancel-btn" onclick="cancelPaste()"><i class="fas fa-times"></i></div>
+        </div>
+    </div>
+    
+    <input type="file" id="importInput" accept="image/*,.zip" onchange="handleImport(this)">
+
+    <div class="file-list-container" id="file-list" onclick="hideAllMenus()"></div>
+
+    <button class="fab-run" onclick="runProject()">
+        <i class="fas fa-play"></i>
+    </button>
+
+    <nav class="bottom-nav">
+        <a href="home.html" class="nav-item active"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="explore.html" class="nav-item"><i class="fas fa-compass"></i><span>Explore</span></a>
+        <a href="globalchat.html" class="nav-item"><i class="fas fa-globe"></i><span>Global</span></a>
+        <a href="chat.html" class="nav-item"><i class="fas fa-comment"></i><span>DM</span></a>
+        <a href="aichat.html" class="nav-item"><i class="fas fa-robot"></i><span>AI</span></a>
+    </nav>
+
+    <div class="modal-overlay" id="createModal">
+        <div class="modal-box">
+            <div id="modal-step1">
+                <div class="modal-header">Create New</div>
+                <div class="choice-grid">
+                    <div class="choice-card" onclick="openModal('step2-file')"><i class="fas fa-file"></i><div class="choice-text">New File</div></div>
+                    <div class="choice-card" onclick="openModal('step2-folder')"><i class="fas fa-folder"></i><div class="choice-text">New Folder</div></div>
+                </div>
+                <div style="margin-top:15px; text-align:right;"><button class="btn-modal btn-cancel" onclick="closeModal()">Close</button></div>
+            </div>
+            <div id="modal-step2-file" style="display:none;">
+                <div class="modal-header">Create File</div>
+                <div class="ext-list">
+                    <div class="ext-chip selected" onclick="selectExt('html', this)">.html</div>
+                    <div class="ext-chip" onclick="selectExt('css', this)">.css</div>
+                    <div class="ext-chip" onclick="selectExt('js', this)">.js</div>
+                    <div class="ext-chip" onclick="selectExt('json', this)">.json</div>
+                </div>
+                <input type="text" id="inp-filename" class="modal-input" placeholder="filename">
+                <div class="modal-actions"><button class="btn-modal btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-modal btn-create" onclick="createNewFile()">Create</button></div>
+            </div>
+            <div id="modal-step2-folder" style="display:none;">
+                <div class="modal-header">Create Folder</div>
+                <input type="text" id="inp-foldername" class="modal-input" placeholder="Folder name">
+                <div class="modal-actions"><button class="btn-modal btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-modal btn-create" onclick="createNewFolder()">Create</button></div>
+            </div>
+        </div>
     </div>
 
-    <div class="file-list-area" id="file-list"></div>
-    <div id="toast">Message</div>
+    <div class="modal-overlay" id="ioModal">
+        <div class="modal-box">
+            <div class="modal-header">Project Options</div>
+            <div class="io-grid">
+                <div class="io-card" onclick="triggerImport()">
+                    <i class="fas fa-file-import io-icon"></i>
+                    <div class="io-text">Import Zip</div>
+                </div>
+                <div class="io-card" onclick="exportProjectZip()">
+                    <i class="fas fa-file-export io-icon"></i>
+                    <div class="io-text">Export to Zip</div>
+                </div>
+            </div>
+            <div style="margin-top:15px; text-align:right;"><button class="btn-modal btn-cancel" onclick="closeIOModal()">Close</button></div>
+        </div>
+    </div>
 
     <script type="module">
-        import { auth, db, doc, getDoc, onAuthStateChanged } from './firebase-config.js';
+        import { auth, db, doc, onSnapshot, updateDoc, onAuthStateChanged } from './firebase-config.js';
 
         const projectId = new URLSearchParams(window.location.search).get('id');
         const listEl = document.getElementById('file-list');
-        const overlay = document.getElementById('loading-overlay');
+        const pathEl = document.getElementById('path-bar');
+        const loader = document.getElementById('loader');
+        const syncStatus = document.getElementById('sync-status');
+        
+        let currentExt = 'html';
+        let fileList = [];
+        let currentPath = "";
+        let clipboard = null; 
+        let projectDataCache = {}; 
+        
+        function loadFromLocalCache() {
+            const cachedData = localStorage.getItem(`cache_proj_${projectId}`);
+            if(cachedData) {
+                const data = JSON.parse(cachedData);
+                document.getElementById('p-title').innerText = data.name;
+                processFiles(data);
+                loader.style.display = 'none';
+            }
+        }
+        if(projectId) loadFromLocalCache();
 
-        // Theme Restore
-        let savedTheme = localStorage.getItem('gothwad_theme');
-        if(savedTheme) document.body.classList.add(savedTheme);
-
-        onAuthStateChanged(auth, async (user) => {
+        onAuthStateChanged(auth, (user) => {
             if(!user) return window.location.href = "login.html";
             if(!projectId) return window.location.href = "home.html";
-
-            try {
-                const docRef = doc(db, "projects", projectId);
-                const snap = await getDoc(docRef);
-
-                if(snap.exists()) {
-                    const data = snap.data();
-                    document.getElementById('p-title').innerText = data.name;
-                    
-                    const projectFiles = [
-                        { name: 'index.html', type: 'html', date: 'Main File' },
-                        { name: 'style.css', type: 'css', date: 'Stylesheet' },
-                        { name: 'script.js', type: 'js', date: 'Logic' }
-                    ];
-
-                    renderFiles(projectFiles);
-                    overlay.style.display = 'none';
-                } else {
-                    alert("Project not found.");
-                    window.location.href = "home.html";
-                }
-            } catch(e) {
-                console.error(e);
-                alert("Error loading files.");
-            }
+            initRealtimeSync();
         });
 
-        function renderFiles(files) {
+        function initRealtimeSync() {
+            syncStatus.innerText = "Syncing...";
+            const docRef = doc(db, "projects", projectId);
+            
+            onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    projectDataCache = data;
+                    syncStatus.innerText = "";
+                    localStorage.setItem(`cache_proj_${projectId}`, JSON.stringify(data));
+                    document.getElementById('p-title').innerText = data.name;
+                    processFiles(data);
+                    loader.style.display = 'none';
+                }
+            }, (error) => {
+                syncStatus.innerText = "(Offline)";
+                loader.style.display = 'none';
+            });
+        }
+
+        function processFiles(data) {
+            fileList = data.extraFiles ? [...data.extraFiles] : [];
+
+            // Add Standard Files to list if they don't exist
+            const stdFiles = [
+                { name: 'index.html', type: 'html', size: 'Cloud', source: 'cloud' },
+                { name: 'style.css', type: 'css', size: 'Cloud', source: 'cloud' },
+                { name: 'script.js', type: 'js', size: 'Cloud', source: 'cloud' }
+            ];
+
+            stdFiles.forEach(std => {
+                const exists = fileList.some(f => f.name === std.name);
+                if (!exists) {
+                    fileList.push(std);
+                }
+            });
+
+            // Local Media
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if(key.startsWith(`proj_${projectId}_`)) {
+                    fileList.push({ name: key.replace(`proj_${projectId}_`, ''), type: 'img', size: 'Local', source: 'local' });
+                }
+            }
+            renderFiles();
+        }
+
+        function renderFiles() {
             listEl.innerHTML = "";
-            files.forEach((f, index) => {
-                let icon = 'fa-file'; let color = '#aaa';
-                if(f.type === 'html') { icon = 'fa-html5'; color = '#e44d26'; }
-                else if(f.type === 'css') { icon = 'fa-css3-alt'; color = '#264de4'; }
-                else if(f.type === 'js') { icon = 'fa-js'; color = '#f0db4f'; }
+            updatePathUI();
+
+            if(currentPath !== "") {
+                let div = document.createElement('div');
+                div.className = 'file-row';
+                div.innerHTML = `<div class="row-click-area" onclick="goUp()"><div class="icon-box simple-back"><i class="fas fa-arrow-up"></i></div><div class="file-info"><div class="file-name" style="color:#1967d2;">..</div></div></div>`;
+                listEl.appendChild(div);
+            }
+
+            let itemsToShow = {};
+            fileList.forEach((f, index) => {
+                if(f.name.startsWith(currentPath)) {
+                    let relativeName = f.name.substring(currentPath.length);
+                    let parts = relativeName.split('/');
+                    if(parts.length > 1) {
+                        let folderName = parts[0];
+                        if(!itemsToShow[folderName]) itemsToShow[folderName] = { type: 'folder', name: folderName, fullPath: currentPath + folderName + '/' };
+                    } else {
+                        if(relativeName !== "") itemsToShow[relativeName] = { ...f, displayName: relativeName, originalIndex: index };
+                    }
+                }
+            });
+
+            let sortedItems = Object.values(itemsToShow).sort((a, b) => {
+                if(a.type === 'folder' && b.type !== 'folder') return -1;
+                if(a.type !== 'folder' && b.type === 'folder') return 1;
+                return a.name.localeCompare(b.name);
+            });
+
+            sortedItems.forEach(item => {
+                let iconClass = 'fa-file-alt'; let colorClass = 'simple-file';
+                if(item.type === 'folder') { iconClass = 'fa-folder'; colorClass = 'simple-folder'; }
+                else if(item.type === 'img' || ['png','jpg'].includes(item.type)) { iconClass = 'fa-image'; colorClass = 'simple-img'; }
 
                 let div = document.createElement('div');
-                div.className = 'file-item';
-                div.style.animationDelay = (index * 0.1) + 's';
-                
-                div.onclick = () => {
-                    // Open Single File Editor
-                    window.location.href = `editor.html?id=${projectId}&tab=${f.type}`;
-                };
+                div.className = 'file-row';
+                let clickAction = item.type === 'folder' ? `openFolder('${item.fullPath}')` : `openFile('${item.type}', '${item.name}')`;
+                let menuHtml = item.type !== 'folder' ? `<div class="file-menu-btn" onclick="toggleMenu(event, ${item.originalIndex})"><i class="fas fa-ellipsis-v"></i></div>` : ``;
 
                 div.innerHTML = `
-                    <div class="f-icon-box"><i class="fas ${icon}" style="color:${color}"></i></div>
-                    <div class="f-details">
-                        <div class="f-title">${f.name}</div>
-                        <div class="f-meta">${f.date}</div>
+                    <div class="row-click-area" onclick="${clickAction}">
+                        <div class="icon-box ${colorClass}"><i class="fas ${iconClass}"></i></div>
+                        <div class="file-info"><div class="file-name">${item.displayName || item.name}</div><div class="file-meta">${item.size || ''}</div></div>
                     </div>
-                    <i class="fas fa-chevron-right f-more" style="font-size:12px;"></i>
+                    ${menuHtml}
+                    ${item.type !== 'folder' ? `
+                        <div class="context-menu" id="menu-${item.originalIndex}">
+                            <div class="ctx-item" onclick="initCopy(${item.originalIndex})"><i class="fas fa-copy"></i> Copy</div>
+                            <div class="ctx-item" onclick="initMove(${item.originalIndex})"><i class="fas fa-cut"></i> Move</div>
+                            <div class="ctx-item" onclick="renameFile(${item.originalIndex})"><i class="fas fa-pen"></i> Rename</div>
+                            <div class="ctx-item ctx-del" onclick="deleteFile(${item.originalIndex})"><i class="fas fa-trash"></i> Delete</div>
+                        </div>` : ''}
                 `;
                 listEl.appendChild(div);
             });
         }
 
-        window.runFullProject = function() {
-            // Opens the Full Preview (runs all files together)
-            window.location.href = `preview.html?id=${projectId}`;
+        async function updateData(newExtraFiles) {
+            const cachedData = JSON.parse(localStorage.getItem(`cache_proj_${projectId}`) || '{}');
+            cachedData.extraFiles = newExtraFiles;
+            localStorage.setItem(`cache_proj_${projectId}`, JSON.stringify(cachedData));
+            processFiles(cachedData); 
+            try {
+                await updateDoc(doc(db, "projects", projectId), { extraFiles: newExtraFiles });
+            } catch(e) {}
         }
 
-        window.showToast = function(msg) {
-            let t = document.getElementById('toast');
-            t.innerText = msg; t.style.display = 'block';
-            setTimeout(() => t.style.display = 'none', 2000);
+        window.initCopy = (index) => {
+            let file = fileList[index];
+            clipboard = { name: file.name, mode: 'copy' };
+            showPasteUI(`Copying ${file.displayName || file.name.split('/').pop()}`);
+            hideAllMenus();
+        };
+
+        window.initMove = (index) => {
+            let file = fileList[index];
+            clipboard = { name: file.name, mode: 'move' };
+            showPasteUI(`Moving ${file.displayName || file.name.split('/').pop()}`);
+            hideAllMenus();
+        };
+
+        function showPasteUI(msg) {
+            document.getElementById('std-actions').style.display = 'none';
+            document.getElementById('paste-actions').style.display = 'flex';
+            document.getElementById('ctrl-title').innerText = msg;
+            document.getElementById('paste-btn-text').innerText = clipboard.mode === 'copy' ? "Copy Here" : "Move Here";
         }
+
+        window.cancelPaste = () => {
+            clipboard = null;
+            document.getElementById('std-actions').style.display = 'flex';
+            document.getElementById('paste-actions').style.display = 'none';
+            document.getElementById('ctrl-title').innerText = "FILES";
+        };
+
+        window.executePaste = async () => {
+            if(!clipboard) return;
+            let sourceFile = fileList.find(f => f.name === clipboard.name);
+            if (!sourceFile) { alert("File not found."); cancelPaste(); return; }
+            const fileName = sourceFile.name.split('/').pop();
+            const newPath = currentPath + fileName; 
+            let currentCloudFiles = fileList.filter(f => f.source === 'cloud');
+
+            let exists = currentCloudFiles.some(f => f.name === newPath);
+            if(exists && clipboard.mode === 'copy') {
+                if(!confirm(`Overwrite ${fileName}?`)) return;
+                currentCloudFiles = currentCloudFiles.filter(f => f.name !== newPath);
+            } else if (exists && clipboard.mode === 'move') {
+                alert("File already exists here."); return;
+            }
+
+            if (clipboard.mode === 'copy') {
+                const newFile = { ...sourceFile, name: newPath, source: 'cloud' };
+                currentCloudFiles.push(newFile);
+            } else if (clipboard.mode === 'move') {
+                let target = currentCloudFiles.find(f => f.name === clipboard.name);
+                if(target) target.name = newPath;
+            }
+
+            updateData(currentCloudFiles);
+            cancelPaste();
+        };
+
+        window.createNewFile = async () => {
+            const name = document.getElementById('inp-filename').value.trim();
+            if(!name) return;
+            const fileName = name.includes('.') ? name : name + '.' + currentExt;
+            const newFile = { name: currentPath + fileName, type: currentExt, size: '0B', source: 'cloud' };
+            let currentCloudFiles = fileList.filter(f => f.source === 'cloud');
+            currentCloudFiles.push(newFile);
+            updateData(currentCloudFiles);
+            closeModal(); document.getElementById('inp-filename').value = "";
+        };
+
+        window.createNewFolder = async () => {
+            const name = document.getElementById('inp-foldername').value.trim();
+            if(!name) return;
+            const newFile = { name: currentPath + name + '/.keep', type: 'keep', size: '0B', source: 'cloud' };
+            let currentCloudFiles = fileList.filter(f => f.source === 'cloud');
+            currentCloudFiles.push(newFile);
+            updateData(currentCloudFiles);
+            closeModal();
+        };
+
+        window.renameFile = async (index) => {
+            let file = fileList[index];
+            let oldName = file.name.split('/').pop();
+            let pathPrefix = file.name.substring(0, file.name.lastIndexOf('/') + 1);
+            let newName = prompt("Rename to:", oldName);
+            if(newName && newName !== oldName) {
+                let currentCloudFiles = fileList.filter(f => f.source === 'cloud');
+                let targetIndex = currentCloudFiles.findIndex(f => f.name === file.name);
+                if(targetIndex !== -1) {
+                    currentCloudFiles[targetIndex].name = pathPrefix + newName;
+                    updateData(currentCloudFiles);
+                }
+            }
+        };
+
+        window.deleteFile = async (index) => {
+            if(confirm("Delete this file?")) {
+                let file = fileList[index];
+                if(file.source === 'local') localStorage.removeItem(`proj_${projectId}_${file.name}`);
+                let currentCloudFiles = fileList.filter(f => f.source === 'cloud');
+                let targetIndex = currentCloudFiles.findIndex(f => f.name === file.name);
+                if(targetIndex !== -1) {
+                    currentCloudFiles.splice(targetIndex, 1);
+                    updateData(currentCloudFiles);
+                } else renderFiles();
+            }
+        };
+
+        window.openFolder = (path) => { currentPath = path; renderFiles(); };
+        window.goUp = () => { if(!currentPath) return; let p=currentPath.split('/'); p.pop(); p.pop(); currentPath=p.length>0?p.join('/')+'/':""; renderFiles(); };
+        window.navigateRoot = () => { currentPath = ""; renderFiles(); };
+        function updatePathUI() {
+            let html = `<span class="path-segment" onclick="navigateRoot()">Home</span>`;
+            if(currentPath) { let p=currentPath.split('/').filter(x=>x); let b=""; p.forEach(x=>{ b+=x+"/"; html+=` <span class="path-sep">/</span> <span class="path-segment" onclick="openFolder('${b}')">${x}</span>`; }); }
+            pathEl.innerHTML = html;
+        }
+        
+        window.toggleMenu = (e, index) => { e.stopPropagation(); hideAllMenus(); let m=document.getElementById(`menu-${index}`); if(m) m.style.display='block'; };
+        window.hideAllMenus = () => document.querySelectorAll('.context-menu').forEach(m=>m.style.display='none');
+        window.openFile = (type, name) => { if(type==='img') alert("Image Preview"); else window.location.href=`editor.html?id=${projectId}&tab=${type}&name=${name}`; };
+        
+        window.openModal = (step) => { document.getElementById('createModal').style.display='flex'; document.querySelectorAll('[id^="modal-step"]').forEach(e=>e.style.display='none'); document.getElementById('modal-'+step).style.display='block'; };
+        window.closeModal = () => document.getElementById('createModal').style.display='none';
+        
+        // IO MODAL
+        window.openIOModal = () => document.getElementById('ioModal').style.display='flex';
+        window.closeIOModal = () => document.getElementById('ioModal').style.display='none';
+        window.triggerImport = () => { closeIOModal(); document.getElementById('importInput').click(); };
+
+        window.selectExt = (ext, el) => { currentExt=ext; document.querySelectorAll('.ext-chip').forEach(c=>c.classList.remove('selected')); el.classList.add('selected'); };
+        window.runProject = () => window.location.href=`preview.html?id=${projectId}`;
+
+        // --- IMPORT & EXPORT LOGIC ---
+        window.handleImport = async (input) => { 
+            const file = input.files[0];
+            if (!file) return;
+
+            // ZIP IMPORT
+            if (file.name.endsWith('.zip')) {
+                loader.style.display = 'flex';
+                try {
+                    const zip = await JSZip.loadAsync(file);
+                    let updatePayload = {};
+                    let newExtraFiles = projectDataCache.extraFiles ? [...projectDataCache.extraFiles] : [];
+
+                    for (let filename in zip.files) {
+                        const zipEntry = zip.files[filename];
+                        if (zipEntry.dir) continue; 
+
+                        const ext = filename.split('.').pop().toLowerCase();
+                        let content = "";
+
+                        if(['png','jpg','jpeg','gif','svg'].includes(ext)) {
+                            content = await zipEntry.async("base64"); 
+                            content = "data:image/" + ext + ";base64," + content;
+                        } else {
+                            content = await zipEntry.async("string");
+                        }
+
+                        // Save Core Files
+                        if (filename === 'index.html') updatePayload.html = content;
+                        else if (filename === 'style.css') updatePayload.css = content;
+                        else if (filename === 'script.js') updatePayload.js = content;
+
+                        // Save All Files to List
+                        const existingIdx = newExtraFiles.findIndex(f => f.name === filename);
+                        const fileObj = { name: filename, type: ext, size: 'Zip', source: 'cloud', content: content };
+
+                        if (existingIdx > -1) newExtraFiles[existingIdx] = fileObj;
+                        else newExtraFiles.push(fileObj);
+                    }
+
+                    updatePayload.extraFiles = newExtraFiles;
+                    await updateDoc(doc(db, "projects", projectId), updatePayload);
+                    alert("Import Successful!");
+
+                } catch (e) {
+                    alert("Error: " + e.message);
+                }
+                loader.style.display = 'none';
+                input.value = ''; 
+                return;
+            }
+
+            // SINGLE IMAGE IMPORT
+            let t=file.name.split('.').pop(); 
+            if(['png','jpg','jpeg','gif'].includes(t.toLowerCase())){ 
+                let r=new FileReader(); 
+                r.onload=(e)=>{ 
+                    localStorage.setItem(`proj_${projectId}_${file.name}`, e.target.result); 
+                    fileList.push({name:file.name, type:'img', size:'Local', source:'local'}); 
+                    renderFiles(); 
+                }; 
+                r.readAsDataURL(file); 
+            }
+            input.value = ''; 
+        };
+
+        window.exportProjectZip = async () => {
+            closeIOModal();
+            loader.style.display = 'flex';
+            try {
+                const zip = new JSZip();
+                
+                // Add Core Files
+                if(projectDataCache.html) zip.file("index.html", projectDataCache.html);
+                if(projectDataCache.css) zip.file("style.css", projectDataCache.css);
+                if(projectDataCache.js) zip.file("script.js", projectDataCache.js);
+
+                // Add Extra Files
+                if(projectDataCache.extraFiles) {
+                    projectDataCache.extraFiles.forEach(f => {
+                        if(['index.html','style.css','script.js'].includes(f.name)) return;
+                        
+                        if(f.content) {
+                            if(f.content.startsWith('data:')) {
+                                const base64Data = f.content.split(',')[1];
+                                zip.file(f.name, base64Data, {base64: true});
+                            } else {
+                                zip.file(f.name, f.content);
+                            }
+                        }
+                    });
+                }
+
+                const content = await zip.generateAsync({type:"blob"});
+                saveAs(content, (projectDataCache.name || "project") + ".zip");
+                
+            } catch(e) {
+                alert("Export Failed: " + e.message);
+            }
+            loader.style.display = 'none';
+        };
+
     </script>
 </body>
 </html>

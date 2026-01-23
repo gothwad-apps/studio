@@ -3,353 +3,264 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Editor</title>
-    
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Gothwad Editor</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ext-language_tools.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* --- WHITE THEME EDITOR --- */
-        body {
-            background-color: #ffffff;
-            margin: 0; padding: 0;
-            height: 100vh; display: flex; flex-direction: column;
-            overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            user-select: none; /* UI select disable, Editor handles text */
-        }
+        /* --- 🎨 MODERN MOBILE THEME --- */
+        :root { --primary: #6200ea; --bg-color: #ffffff; --border-color: #eeeeee; --text-main: #333333; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { margin: 0; padding: 0; height: 100vh; width: 100vw; display: flex; flex-direction: column; background-color: var(--bg-color); font-family: 'Segoe UI', Roboto, sans-serif; overflow: hidden; }
 
-        /* 1. HEADER */
-        .ide-header {
-            height: 55px; background: #f8f9fa;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 0 10px; border-bottom: 1px solid #ddd;
-            z-index: 10;
-        }
-
-        .file-info { display: flex; align-items: center; gap: 10px; }
-        .back-icon { font-size: 18px; color: #555; padding: 10px; cursor: pointer; }
-
-        .file-name { font-size: 16px; font-weight: 700; color: #333; }
-        .project-sub { font-size: 10px; color: #666; display: block; margin-top: -2px; }
-
-        .ide-actions { display: flex; gap: 8px; align-items: center; position: relative; }
+        /* HEADER */
+        .ide-header { height: 60px; background: #ffffff; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; border-bottom: 1px solid var(--border-color); box-shadow: 0 2px 10px rgba(0,0,0,0.02); z-index: 20; flex-shrink: 0; }
+        .header-left { display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; }
+        .back-btn { font-size: 20px; color: #555; padding: 5px; cursor: pointer; flex-shrink: 0; }
+        .file-info { display: flex; flex-direction: column; overflow: hidden; }
+        .file-name { font-size: 15px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .project-name { font-size: 10px; color: #888; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
         
-        .save-status { font-size: 10px; color: #888; font-weight: 500; min-width: 35px; text-align: right; }
+        .status-badge { font-size: 9px; font-weight: 600; color: #ccc; margin-right: 2px; }
+        .status-badge.saved { color: #00c853; }
+        .status-badge.unsaved { color: #ff9100; }
 
-        /* Buttons */
-        .btn-action {
-            width: 35px; height: 35px; border-radius: 50%; border: none;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; font-size: 14px; transition: 0.2s;
-            background: #fff; border: 1px solid #ddd; color: #333;
-        }
-        .btn-run { background: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; }
-        .btn-action:active { background: #eee; }
+        .icon-btn { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; border: none; cursor: pointer; background: #f5f5f5; color: #555; transition: 0.1s; }
+        .icon-btn:active { transform: scale(0.95); background: #eee; }
+        .btn-run { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .btn-undo { background: #fff; border: 1px solid #eee; color: #444; }
 
-        /* 2. EDITOR AREA */
-        #editor-container { flex: 1; position: relative; background: #fff; }
-        #editor { position: absolute; top: 0; right: 0; bottom: 0; left: 0; font-size: 14px; line-height: 22px; }
+        /* EDITOR */
+        #editor-wrapper { flex: 1; position: relative; background: #fff; }
+        #editor { position: absolute; top: 0; right: 0; bottom: 0; left: 0; font-size: 15px !important; line-height: 24px !important; }
 
-        /* 3. KEYBOARD HELPER */
-        .quick-keys {
-            height: 45px; background: #f1f1f1;
-            display: flex; align-items: center; gap: 5px;
-            padding: 0 8px; overflow-x: auto;
-            border-top: 1px solid #ddd;
-        }
-        .key-btn {
-            min-width: 40px; height: 35px;
-            background: #fff; border: 1px solid #ccc; color: #333;
-            border-radius: 6px; font-family: monospace; font-size: 16px;
-            cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
-        .key-btn:active { background: var(--primary); color: #fff; }
+        /* KEYBOARD */
+        .quick-keys-bar { height: 50px; background: #fff; border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px; padding: 0 10px; overflow-x: auto; white-space: nowrap; flex-shrink: 0; -ms-overflow-style: none; scrollbar-width: none; }
+        .quick-keys-bar::-webkit-scrollbar { display: none; }
+        .key-chip { min-width: 45px; height: 36px; background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; color: #333; font-weight: 600; font-family: monospace; font-size: 16px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 0 #ddd; }
+        .key-chip:active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: none; transform: translateY(2px); }
+        .key-chip-text { font-size: 12px; font-family: sans-serif; width: auto; padding: 0 10px; }
 
-        /* --- MENUS --- */
-        
-        /* Top Right Menu */
-        .dropdown-menu {
-            position: absolute; top: 45px; right: 0;
-            background: #fff; width: 160px;
-            border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            border: 1px solid #eee; display: none; flex-direction: column; z-index: 100;
-        }
-        .menu-item { padding: 12px 15px; font-size: 14px; color: #333; cursor: pointer; border-bottom: 1px solid #f5f5f5; }
-        .menu-item:last-child { border-bottom: none; }
+        /* MENU */
+        .dropdown-menu { position: absolute; top: 65px; right: 10px; background: #fff; width: 200px; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); border: 1px solid #eee; display: none; flex-direction: column; z-index: 100; }
+        .menu-item { padding: 15px; font-size: 14px; color: #333; font-weight: 500; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #f9f9f9; cursor: pointer; }
         .menu-item:active { background: #f5f5f5; }
-        .menu-danger { color: #d32f2f; }
+        .text-danger { color: #d32f2f; }
 
-        /* Context Menu (Copy/Paste) */
-        #context-menu {
-            position: absolute; background: #333; color: #fff;
-            border-radius: 8px; padding: 5px; display: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 999;
-            flex-direction: row; gap: 10px;
-        }
-        .ctx-btn {
-            background: transparent; border: none; color: #fff;
-            padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer;
-        }
-        .ctx-btn:active { color: #aaa; }
-        .ctx-divider { width: 1px; background: #555; height: 20px; align-self: center; }
-
-        /* Loader */
-        #loading-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #ffffff; z-index: 200; display: flex;
-            align-items: center; justify-content: center; color: #333;
-            flex-direction: column; gap: 10px;
-        }
+        /* LOADER */
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 200; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 15px; }
+        .loader-spinner { font-size: 30px; color: var(--primary); }
     </style>
 </head>
 <body>
 
-    <div id="loading-overlay">
-        <i class="fas fa-circle-notch fa-spin" style="font-size:30px; color:#6200ee"></i>
-        <span style="font-size:12px;">Opening File...</span>
+    <div id="loader">
+        <i class="fas fa-circle-notch fa-spin loader-spinner"></i>
+        <div style="font-size:14px; color:#666; font-weight:500;">Loading File...</div>
     </div>
 
-    <div class="ide-header">
-        <div class="file-info">
-            <i class="fas fa-arrow-left back-icon" onclick="window.location.href='filemanager.html?id=' + projectId"></i>
-            <div>
-                <div class="file-name" id="display-filename">...</div>
-                <div class="project-sub" id="display-projectname">Project</div>
+    <header class="ide-header">
+        <div class="header-left">
+            <i class="fas fa-arrow-left back-btn" onclick="window.history.back()"></i>
+            <div class="file-info">
+                <div class="file-name" id="display-filename">loading...</div>
+                <div class="project-name" id="display-projectname">Project</div>
             </div>
         </div>
-        <div class="ide-actions">
-            <span class="save-status" id="saveStatus">Synced</span>
-            <button class="btn-action btn-run" onclick="runCode()"><i class="fas fa-play"></i></button>
-            <button class="btn-action" onclick="toggleMenu()"><i class="fas fa-ellipsis-v"></i></button>
-            
-            <div class="dropdown-menu" id="topMenu">
-                <div class="menu-item" onclick="renameFile()">Rename File</div>
-                <div class="menu-item" onclick="copyAll()">Copy All Code</div>
-                <div class="menu-item" onclick="formatCode()">Format Code</div>
-                <div class="menu-item menu-danger" onclick="clearCode()">Clear Content</div>
-            </div>
+        <div class="header-right">
+            <button class="icon-btn btn-undo" onclick="undoCode()"><i class="fas fa-undo"></i></button>
+            <button class="icon-btn btn-undo" onclick="redoCode()"><i class="fas fa-redo"></i></button>
+            <span class="status-badge" id="save-status">Saved</span>
+            <button class="icon-btn btn-run" onclick="runCode()"><i class="fas fa-play"></i></button>
+            <button class="icon-btn btn-more" onclick="toggleMenu()"><i class="fas fa-ellipsis-v"></i></button>
         </div>
+    </header>
+
+    <div class="dropdown-menu" id="main-menu">
+        <div class="menu-item" onclick="formatCode()"><i class="fas fa-align-left"></i> Format Code</div>
+        <div class="menu-item" onclick="copyAll()"><i class="fas fa-copy"></i> Copy All</div>
+        <div class="menu-item text-danger" onclick="clearCode()"><i class="fas fa-trash"></i> Clear All</div>
     </div>
 
-    <div id="editor-container">
-        <div id="editor"></div>
-    </div>
+    <div id="editor-wrapper"><div id="editor"></div></div>
 
-    <div id="context-menu">
-        <button class="ctx-btn" onclick="execCmd('selectAll')">Select All</button>
-        <div class="ctx-divider"></div>
-        <button class="ctx-btn" onclick="execCmd('copy')">Copy</button>
-        <div class="ctx-divider"></div>
-        <button class="ctx-btn" onclick="execCmd('paste')">Paste</button>
-    </div>
-
-    <div class="quick-keys">
-        <button class="key-btn" onclick="insertKey('<')">&lt;</button>
-        <button class="key-btn" onclick="insertKey('>')">&gt;</button>
-        <button class="key-btn" onclick="insertKey('/')">/</button>
-        <button class="key-btn" onclick="insertKey('=')">=</button>
-        <button class="key-btn" onclick="insertKey('"')">"</button>
-        <button class="key-btn" onclick="insertKey('{')">{</button>
-        <button class="key-btn" onclick="insertKey('}')">}</button>
-        <button class="key-btn" onclick="insertKey(';')">;</button>
-        <button class="key-btn" onclick="insertKey('!')">!</button>
-        <button class="key-btn" onclick="insertKey('class')">class</button>
-        <button class="key-btn" onclick="insertKey('id')">id</button>
+    <div class="quick-keys-bar">
+        <div class="key-chip" onclick="ins('<')">&lt;</div>
+        <div class="key-chip" onclick="ins('>')">&gt;</div>
+        <div class="key-chip" onclick="ins('/')">/</div>
+        <div class="key-chip" onclick="ins('=')">=</div>
+        <div class="key-chip" onclick="ins('(')">(</div>
+        <div class="key-chip" onclick="ins(')')">)</div>
+        <div class="key-chip" onclick="ins('{')">{</div>
+        <div class="key-chip" onclick="ins('}')">}</div>
+        <div class="key-chip" onclick="ins(';')">;</div>
+        <div class="key-chip" onclick="ins('"')">"</div>
+        <div class="key-chip" onclick="ins('$')">$</div>
+        <div class="key-chip" onclick="ins('!')">!</div>
+        <div class="key-chip key-chip-text" onclick="ins('class')">class</div>
+        <div class="key-chip key-chip-text" onclick="ins('function')">func</div>
+        <div class="key-chip key-chip-text" onclick="ins('console.log')">log</div>
     </div>
 
     <script type="module">
         import { auth, db, doc, getDoc, updateDoc } from './firebase-config.js';
 
-        // 1. SETUP & PARAMS
+        // 1. ROBUST SETUP
         const params = new URLSearchParams(window.location.search);
-        window.projectId = params.get('id'); // Global for back button
+        const projectId = params.get('id');
+        // Decode URI component fixes issues with filenames having spaces
+        const fileNameParam = decodeURIComponent(params.get('name') || '');
         const fileType = params.get('tab') || 'html';
-        const fileNames = { 'html': 'index.html', 'css': 'style.css', 'js': 'script.js' };
+
+        let displayFile = fileNameParam || 'index.html';
+        if(!fileNameParam) {
+            if(fileType === 'css') displayFile = 'style.css';
+            if(fileType === 'js') displayFile = 'script.js';
+        }
+        
+        document.getElementById('display-filename').innerText = displayFile;
 
         // 2. ACE EDITOR CONFIG
         var editor = ace.edit("editor");
-        editor.setTheme("ace/theme/chrome"); // Clean White Theme
+        editor.setTheme("ace/theme/textmate");
         
         let aceMode = 'html';
-        if(fileType === 'css') aceMode = 'css';
-        if(fileType === 'js') aceMode = 'javascript';
+        if (displayFile.endsWith('.css')) aceMode = 'css';
+        else if (displayFile.endsWith('.js')) aceMode = 'javascript';
+        else if (displayFile.endsWith('.json')) aceMode = 'json';
+        else if (displayFile.endsWith('.py')) aceMode = 'python';
+        
         editor.session.setMode("ace/mode/" + aceMode);
+        editor.setOptions({ fontSize: "15px", showPrintMargin: false, wrap: true, showFoldWidgets: false, fixedWidthGutter: true, displayIndentGuides: false, fontFamily: "Menlo, Monaco, Consolas, 'Courier New', monospace" });
+        editor.renderer.setPadding(10); 
+        
+        window.undoCode = () => { editor.undo(); editor.focus(); };
+        window.redoCode = () => { editor.redo(); editor.focus(); };
 
-        editor.setFontSize(14);
-        editor.setShowPrintMargin(false);
-        
-        // --- 🔥 MAGIC FOR THIN GUTTER ---
-        editor.setOption("showFoldWidgets", false); // Hides collapse arrows (saves space)
-        editor.renderer.setPadding(0); // Removes padding
-        editor.setOption("fixedWidthGutter", true); // Optional: forces width
-        
-        editor.setOptions({
-            enableBasicAutocompletion: true,
-            enableLiveAutocompletion: true,
-            showLineNumbers: true,
-            tabSize: 2
-        });
-
-        // UI Updates
-        document.getElementById('display-filename').innerText = fileNames[fileType];
-        
-        let saveTimer = null;
-        const statusSpan = document.getElementById('saveStatus');
-        const loader = document.getElementById('loading-overlay');
         let fullProjectData = {};
+        let saveTimer = null;
+        const statusBadge = document.getElementById('save-status');
 
-        // 3. LOAD DATA
+        // 3. LOAD CONTENT (THE FIX)
         async function init() {
-            if(!projectId) return alert("Error: No ID");
+            if(!projectId) return;
+            
+            // Check Local Cache First (Instant Load)
+            const cached = localStorage.getItem(`proj_cache_${projectId}`);
+            if(cached) {
+                const data = JSON.parse(cached);
+                attemptLoadContent(data);
+                document.getElementById('loader').style.display = 'none';
+            }
 
-            auth.onAuthStateChanged(async (user) => {
-                if(!user) return window.location.href = 'login.html';
-
-                try {
-                    const docRef = doc(db, "projects", projectId);
-                    const docSnap = await getDoc(docRef);
-
-                    if (docSnap.exists()) {
-                        fullProjectData = docSnap.data();
-                        document.getElementById('display-projectname').innerText = fullProjectData.name;
-
-                        let content = "";
-                        if(fileType === 'html') content = fullProjectData.html || "";
-                        if(fileType === 'css') content = fullProjectData.css || "";
-                        if(fileType === 'js') content = fullProjectData.js || "";
-
-                        editor.setValue(content, -1);
-                        loader.style.display = 'none';
-                    } else {
-                        alert("File not found!");
-                        window.location.href = 'home.html';
-                    }
-                } catch(e) {
-                    console.error(e);
+            // Cloud Backup Load
+            try {
+                const docRef = doc(db, "projects", projectId);
+                const snap = await getDoc(docRef);
+                if(snap.exists()) {
+                    fullProjectData = snap.data();
+                    document.getElementById('display-projectname').innerText = fullProjectData.name;
+                    attemptLoadContent(fullProjectData);
+                    document.getElementById('loader').style.display = 'none';
                 }
-            });
+            } catch(e) { console.log("Offline mode"); }
         }
         init();
 
-        // 4. AUTO SAVE
-        editor.session.on('change', function() {
-            statusSpan.innerText = "Typing...";
+        function attemptLoadContent(data) {
+            let content = null;
+
+            // Priority 1: Check Local Storage (Imported files live here)
+            // This is the key generated by FileManager when importing
+            let importKey = `proj_${projectId}_${displayFile}`;
+            let importContent = localStorage.getItem(importKey);
+
+            // Priority 2: Check standard editor save key
+            let editKey = `file_content_${projectId}_${displayFile}`;
+            let editContent = localStorage.getItem(editKey);
+
+            // Priority 3: Cloud Data
+            let cloudContent = null;
+            if (displayFile === 'index.html') cloudContent = data.html;
+            else if (displayFile === 'style.css') cloudContent = data.css;
+            else if (displayFile === 'script.js') cloudContent = data.js;
+            
+            // Determine best source
+            if(editContent !== null) content = editContent;
+            else if(importContent !== null) content = importContent; // <--- FIX FOR IMPORTED FILES
+            else if(cloudContent !== null) content = cloudContent;
+
+            // If still null, try finding in extraFiles array
+            if(content === null && data.extraFiles) {
+                // Sometimes extraFiles stores content directly (future proofing)
+                const found = data.extraFiles.find(f => f.name === displayFile);
+                if(found && found.content) content = found.content;
+            }
+
+            // Set to Editor
+            if(content !== null) {
+                // Only set if editor is basically empty (avoid overwriting user work if multiple calls)
+                if(editor.getValue().length < 2) { 
+                    editor.setValue(content, -1);
+                    editor.getSession().getUndoManager().reset();
+                }
+            } else {
+                console.log("New file or Empty");
+            }
+        }
+
+        // 4. AUTO SAVE (Writes to both keys to be safe)
+        editor.session.on('change', () => {
+            statusBadge.innerText = "•";
+            statusBadge.className = "status-badge unsaved";
             if(saveTimer) clearTimeout(saveTimer);
-            saveTimer = setTimeout(saveToCloud, 1500); 
+            saveTimer = setTimeout(saveProject, 800);
         });
 
-        async function saveToCloud() {
-            statusSpan.innerText = "Saving...";
-            let newContent = editor.getValue();
-            let updatePayload = {};
-
-            if(fileType === 'html') { updatePayload.html = newContent; fullProjectData.html = newContent; }
-            if(fileType === 'css') { updatePayload.css = newContent; fullProjectData.css = newContent; }
-            if(fileType === 'js') { updatePayload.js = newContent; fullProjectData.js = newContent; }
+        async function saveProject() {
+            const code = editor.getValue();
             
-            updatePayload.updatedAt = new Date();
+            // SAVE TO LOCAL STORAGE (Both Import Key and Edit Key)
+            // This ensures FileManager can read it back if it uses that key
+            localStorage.setItem(`proj_${projectId}_${displayFile}`, code); 
+            localStorage.setItem(`file_content_${projectId}_${displayFile}`, code);
 
+            // Update Memory Object
+            if (displayFile === 'index.html') fullProjectData.html = code;
+            else if (displayFile === 'style.css') fullProjectData.css = code;
+            else if (displayFile === 'script.js') fullProjectData.js = code;
+            
+            localStorage.setItem(`proj_cache_${projectId}`, JSON.stringify(fullProjectData));
+
+            // Sync Cloud
             try {
                 const docRef = doc(db, "projects", projectId);
-                await updateDoc(docRef, updatePayload);
-                statusSpan.innerText = "Saved";
-                statusSpan.style.color = "#2e7d32";
-                setTimeout(() => { statusSpan.style.color = "#888"; }, 2000);
+                let updateData = {};
+                
+                if (displayFile === 'index.html') updateData.html = code;
+                else if (displayFile === 'style.css') updateData.css = code;
+                else if (displayFile === 'script.js') updateData.js = code;
+                // For other files, we just rely on local storage + extraFiles list in DB for now
+                
+                await updateDoc(docRef, updateData);
+                statusBadge.innerText = "Saved";
+                statusBadge.className = "status-badge saved";
             } catch(e) {
-                statusSpan.innerText = "Error";
-                statusSpan.style.color = "red";
+                statusBadge.innerText = "Local";
             }
         }
 
-        // --- 5. LONG PRESS CONTEXT MENU LOGIC ---
-        const contextMenu = document.getElementById('context-menu');
-        
-        // Disable default right-click
-        document.getElementById('editor').addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-            // Show custom menu at click position
-            contextMenu.style.display = 'flex';
-            
-            // Adjust position to not go off screen
-            let x = e.pageX;
-            let y = e.pageY;
-            if(x + 200 > window.innerWidth) x = window.innerWidth - 210;
-            
-            contextMenu.style.left = x + 'px';
-            contextMenu.style.top = y + 'px';
-        });
-
-        // Hide menus on click elsewhere
-        document.addEventListener('click', (e) => {
-            if(!e.target.closest('#context-menu')) contextMenu.style.display = 'none';
-            if(!e.target.closest('.ide-actions')) document.getElementById('topMenu').style.display = 'none';
-        });
-
-        window.execCmd = async (cmd) => {
-            if(cmd === 'selectAll') {
-                editor.selectAll();
-            } else if(cmd === 'copy') {
-                let text = editor.getCopyText();
-                if(text) {
-                    await navigator.clipboard.writeText(text);
-                    alert("Copied to clipboard!");
-                } else {
-                    // Fallback: Copy All if nothing selected
-                    await navigator.clipboard.writeText(editor.getValue());
-                    alert("All code copied!");
-                }
-            } else if(cmd === 'paste') {
-                try {
-                    const text = await navigator.clipboard.readText();
-                    editor.insert(text);
-                } catch(err) {
-                    alert("Paste permission denied. Use keyboard.");
-                }
-            }
-            contextMenu.style.display = 'none';
-        }
-
-        // --- 6. TOP MENU ACTIONS ---
-        window.toggleMenu = () => {
-            const m = document.getElementById('topMenu');
-            m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
-        }
-
-        window.renameFile = () => {
-            alert("Renaming structural files (index/style/script) is disabled in this version to prevent crash.");
-        }
-
-        window.copyAll = async () => {
-            await navigator.clipboard.writeText(editor.getValue());
-            alert("All code copied!");
-            toggleMenu();
-        }
-
-        window.formatCode = () => {
-            // Basic beautify via JSON stringify hack (or just indent)
-            // Ideally use a library, but for now just Select All
-            editor.selectAll();
-            alert("Auto-format requires plugin. Selected all for manual format.");
-            toggleMenu();
-        }
-
-        window.clearCode = () => {
-            if(confirm("Are you sure you want to delete all code?")) {
-                editor.setValue("");
-                saveToCloud();
-            }
-            toggleMenu();
-        }
-
-        window.runCode = async () => {
-            await saveToCloud();
-            window.location.href = `preview.html?id=${projectId}`;
-        };
-
-        window.insertKey = (k) => { editor.insert(k); editor.focus(); };
+        // 5. HELPERS
+        window.ins = (txt) => { editor.insert(txt); editor.focus(); };
+        window.runCode = async () => { await saveProject(); window.location.href = `preview.html?id=${projectId}`; };
+        window.toggleMenu = () => { const m = document.getElementById('main-menu'); m.style.display = m.style.display === 'flex' ? 'none' : 'flex'; };
+        document.addEventListener('click', (e) => { if (!e.target.closest('.icon-btn') && !e.target.closest('.dropdown-menu')) document.getElementById('main-menu').style.display = 'none'; });
+        window.copyAll = () => { navigator.clipboard.writeText(editor.getValue()); toggleMenu(); alert("Copied!"); };
+        window.clearCode = () => { if(confirm("Clear everything?")) editor.setValue(""); toggleMenu(); };
+        window.formatCode = () => { editor.selectAll(); toggleMenu(); };
 
     </script>
 </body>

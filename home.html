@@ -9,14 +9,24 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        /* --- 🛠 GLOBAL LAYOUT --- */
+        /* --- 🛠 CLEAN WHITE THEME --- */
+        :root {
+            --primary: #6200ea;
+            --bg-color: #f5f5f5;
+            --surface-color: #ffffff;
+            --text-main: #333333;
+            --text-sub: #666666;
+            --border: #e0e0e0;
+            --danger: #d32f2f;
+        }
+
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body {
             background-color: var(--bg-color);
             margin: 0; padding: 0;
-            padding-top: 60px; /* Space for Header */
-            padding-bottom: 70px; /* Space for Bottom Nav */
+            padding-top: 60px; /* Header Space */
+            padding-bottom: 70px; /* Nav Space */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             overflow-x: hidden;
         }
@@ -27,22 +37,27 @@
             background: var(--surface-color);
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             z-index: 100;
             border-bottom: 1px solid var(--border);
         }
 
-        .brand-title {
-            font-size: 18px; font-weight: 800; color: var(--primary);
-            flex: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
+        .brand-container { flex: 1; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .brand-title { font-size: 18px; font-weight: 800; color: var(--text-main); line-height: 1.1; }
         
-        .icon-btn { background: none; border: none; font-size: 20px; color: var(--text-main); padding: 10px; cursor: pointer; }
+        /* SYNC INDICATOR */
+        .sync-badge { font-size: 10px; font-weight: 500; color: #999; display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: #ccc; }
+        .status-dot.online { background: #00e676; box-shadow: 0 0 4px #00e676; }
+        .status-dot.offline { background: #ff3d00; }
+        
+        .icon-btn { background: none; border: none; font-size: 20px; color: var(--text-sub); padding: 10px; cursor: pointer; }
 
         /* 2. SIDEBAR */
         .sidebar-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); z-index: 200; opacity: 0; pointer-events: none; transition: 0.3s;
+            background: rgba(0,0,0,0.5); z-index: 200; opacity: 0; pointer-events: none; transition: 0.3s;
+            backdrop-filter: blur(2px);
         }
         .sidebar-overlay.active { opacity: 1; pointer-events: all; }
 
@@ -51,50 +66,117 @@
             background: var(--surface-color); z-index: 201;
             transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex; flex-direction: column;
-            box-shadow: 5px 0 15px rgba(0,0,0,0.3);
+            box-shadow: 5px 0 15px rgba(0,0,0,0.1);
         }
         .sidebar.active { left: 0; }
 
-        .user-header { padding: 30px 20px; background: linear-gradient(135deg, var(--primary), #6200ea); color: #fff; }
-        .avatar-circle { width: 50px; height: 50px; background: #fff; color: var(--primary); border-radius: 50%; font-size: 20px; font-weight: bold; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
-        .user-name { font-size: 16px; font-weight: 700; display: block; }
-        .user-email { font-size: 12px; opacity: 0.8; }
-        
-        .menu-list { flex: 1; padding: 10px 0; overflow-y: auto; }
-        .menu-item { padding: 15px 20px; display: flex; align-items: center; color: var(--text-main); font-size: 14px; font-weight: 500; cursor: pointer; }
-        .menu-item i { width: 30px; font-size: 16px; color: var(--text-sub); }
+        .user-header { 
+            padding: 25px 20px; 
+            background: #fff; 
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 15px;
+        }
+        .avatar-circle { 
+            width: 50px; height: 50px; 
+            background: var(--primary); color: #fff; 
+            border-radius: 50%; font-size: 22px; font-weight: bold; 
+            display: flex; align-items: center; justify-content: center; 
+            flex-shrink: 0;
+        }
+        .user-info-col { display: flex; flex-direction: column; overflow: hidden; }
+        .user-name { font-size: 16px; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-email { font-size: 12px; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* 3. SEARCH & CONTENT */
+        .menu-list { flex: 1; padding: 10px 0; overflow-y: auto; }
+        .menu-item { padding: 12px 20px; display: flex; align-items: center; color: var(--text-main); font-size: 14px; font-weight: 500; cursor: pointer; transition: 0.2s; }
+        .menu-item:active { background: #f0f0f0; }
+        .menu-item i { width: 35px; font-size: 16px; color: var(--text-sub); }
+        .menu-divider { border: 0; border-top: 1px solid var(--border); margin: 5px 0; }
+        .menu-label { font-size: 11px; font-weight: 700; color: #999; padding: 15px 20px 5px 20px; text-transform: uppercase; }
+
+        /* 3. CONTENT AREA */
         .search-wrapper {
             background: var(--surface-color); padding: 0 20px 15px 20px;
             display: none; border-bottom: 1px solid var(--border);
-            width: 100%; animation: slideDown 0.2s ease-out;
+            width: 100%;
         }
-        .search-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); outline: none; }
+        .search-input { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: #f5f5f5; color: var(--text-main); outline: none; }
         
-        .container { padding: 20px; width: 100%; }
+        .container { padding: 15px; width: 100%; max-width: 600px; margin: 0 auto; }
         
         .section-title {
             font-size: 12px; font-weight: 700; color: var(--text-sub);
-            margin-bottom: 10px; margin-top: 10px; letter-spacing: 0.5px; text-transform: uppercase;
+            margin: 20px 0 10px 5px; letter-spacing: 0.5px; text-transform: uppercase;
         }
 
+        /* Project Cards */
         .project-card {
             background: var(--surface-color); border-radius: 12px; padding: 15px; margin-bottom: 12px;
-            display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: 1px solid var(--border);
-            cursor: pointer;
+            display: flex; align-items: center; border: 1px solid var(--border);
+            cursor: pointer; position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            transition: transform 0.1s;
         }
-        .project-card:active { transform: scale(0.98); transition: 0.1s; }
+        .project-card:active { transform: scale(0.98); background: #fafafa; }
 
-        .proj-icon { width: 45px; height: 45px; background: rgba(187, 134, 252, 0.1); color: var(--primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-right: 15px; flex-shrink: 0; }
+        .proj-icon { width: 40px; height: 40px; background: #f0f0f0; color: #555; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-right: 15px; flex-shrink: 0; }
+        .icon-blue { color: #2196f3; background: #e3f2fd; }
+        .icon-orange { color: #ff9800; background: #fff3e0; }
+        .icon-pink { color: #e91e63; background: #fce4ec; }
+
         .proj-info { flex: 1; overflow: hidden; }
         .proj-name { font-size: 15px; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .proj-date { font-size: 11px; color: var(--text-sub); }
-        .proj-menu-btn { padding: 10px; color: var(--text-sub); background: none; border: none; cursor: pointer; }
+        .proj-date { font-size: 11px; color: var(--text-sub); margin-top: 2px; }
+        
+        /* 3 DOTS MENU BUTTON */
+        .proj-menu-btn { 
+            padding: 10px 15px; 
+            margin-right: -10px; 
+            color: #999; 
+            background: none; 
+            border: none; 
+            cursor: pointer; 
+            font-size: 16px; 
+            z-index: 2;
+        }
+        .proj-menu-btn:active { color: var(--primary); }
 
-        .empty-state { text-align: center; margin-top: 40px; display: none; }
-        .empty-icon { font-size: 50px; color: var(--border); margin-bottom: 15px; }
-        .loading { text-align: center; margin-top: 20px; color: var(--text-sub); font-size: 12px; }
+        .empty-state { text-align: center; margin-top: 60px; display: none; }
+        .empty-icon { font-size: 40px; color: #ccc; margin-bottom: 10px; }
+        .loading { text-align: center; margin-top: 20px; color: var(--text-sub); font-size: 12px; display: none; }
+
+        /* --- 4. BOTTOM ACTION SHEET (For 3 Dots) --- */
+        .action-sheet-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 250;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .action-sheet-overlay.active { opacity: 1; pointer-events: all; }
+
+        .action-sheet {
+            position: fixed; bottom: -100%; left: 0; width: 100%;
+            background: var(--surface-color); 
+            border-top-left-radius: 20px; border-top-right-radius: 20px;
+            z-index: 251; padding: 20px 0;
+            transition: bottom 0.3s cubic-bezier(0.1, 0.7, 0.1, 1);
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+        }
+        .action-sheet.active { bottom: 0; }
+
+        .sheet-header { padding: 0 25px 15px 25px; border-bottom: 1px solid var(--border); margin-bottom: 5px; }
+        .sheet-title { font-size: 16px; font-weight: 700; color: var(--text-main); }
+        .sheet-subtitle { font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+
+        .sheet-item {
+            padding: 15px 25px; display: flex; align-items: center; gap: 15px;
+            font-size: 15px; color: var(--text-main); cursor: pointer;
+            transition: background 0.2s;
+        }
+        .sheet-item:active { background: #f5f5f5; }
+        .sheet-item i { font-size: 18px; width: 24px; text-align: center; color: #777; }
+        
+        .sheet-item.danger { color: var(--danger); }
+        .sheet-item.danger i { color: var(--danger); }
 
         /* BOTTOM NAV */
         .bottom-nav {
@@ -103,51 +185,90 @@
             display: flex; justify-content: space-around; align-items: center;
             border-top: 1px solid var(--border);
             z-index: 95;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
         }
 
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-sub); text-decoration: none; height: 100%; cursor: pointer; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #999; text-decoration: none; height: 100%; cursor: pointer; }
         .nav-item i { font-size: 20px; margin-bottom: 4px; }
         .nav-item span { font-size: 10px; font-weight: 500; }
         .nav-item.active { color: var(--primary); }
-        .nav-item:active { background-color: rgba(0,0,0,0.03); }
+        .nav-item:active { background-color: #f9f9f9; }
 
-        /* FAB */
+        /* FAB (Now a Plus Button) */
         .fab {
-            position: fixed; bottom: 75px; right: 20px;
+            position: fixed; bottom: 80px; right: 20px;
             width: 56px; height: 56px; background: var(--primary);
             color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: none; cursor: pointer; z-index: 90; transition: transform 0.2s;
+            font-size: 24px; box-shadow: 0 4px 10px rgba(98, 0, 234, 0.4); border: none; cursor: pointer; z-index: 90; 
+            transition: transform 0.2s;
         }
         .fab:active { transform: scale(0.9); }
 
-        @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div class="sidebar-overlay" onclick="toggleMenu()"></div>
+    
     <div class="sidebar">
         <div class="user-header">
             <div class="avatar-circle" id="user-avatar">?</div>
-            <span class="user-name" id="user-name">Loading...</span>
-            <span class="user-email" id="user-email">wait...</span>
+            <div class="user-info-col">
+                <span class="user-name" id="user-name">Loading...</span>
+                <span class="user-email" id="user-email">wait...</span>
+            </div>
         </div>
         <div class="menu-list">
+            
+            <div class="menu-label">Main</div>
             <div class="menu-item" onclick="toggleMenu()"><i class="fas fa-home"></i> Home</div>
             <div class="menu-item" onclick="location.href='profile.html'"><i class="fas fa-user"></i> Profile</div>
             <div class="menu-item" onclick="location.href='settings.html'"><i class="fas fa-cog"></i> Settings</div>
-            <hr style="border:0; border-top:1px solid var(--border); margin:5px 0;">
-            <div class="menu-item" onclick="location.href='bug.html'"><i class="fas fa-bug" style="color:#ffa726"></i> Report Bug</div>
-            <div class="menu-item" onclick="location.href='feedback.html'"><i class="fas fa-comment-alt" style="color:#29b6f6"></i> Feedback</div>
+            
+            <hr class="menu-divider">
+            <div class="menu-label">Resources</div>
+            <div class="menu-item" onclick="alert('Docs coming soon!')"><i class="fas fa-book" style="color:#5c6bc0;"></i> Documentation</div>
+            <div class="menu-item" onclick="alert('Community Hub coming soon!')"><i class="fas fa-users" style="color:#26a69a;"></i> Community</div>
+            <div class="menu-item" onclick="alert('Trash is empty.')"><i class="fas fa-trash-alt" style="color:#78909c;"></i> Recycle Bin</div>
+            <div class="menu-item" onclick="alert('Themes coming soon!')"><i class="fas fa-palette" style="color:#ab47bc;"></i> Themes</div>
+
+            <hr class="menu-divider">
+            <div class="menu-label">Support</div>
+            <div class="menu-item" onclick="location.href='bug.html'"><i class="fas fa-bug" style="color:#ffa726;"></i> Report Bug</div>
+            <div class="menu-item" onclick="location.href='feedback.html'"><i class="fas fa-comment-alt" style="color:#29b6f6;"></i> Feedback</div>
+            <div class="menu-item" onclick="alert('Gothwad Studio v1.0')"><i class="fas fa-info-circle" style="color:#ef5350;"></i> About Us</div>
+            
             <div style="flex:1"></div>
-            <div class="menu-item" onclick="handleLogout()" style="color:#ff4444;"><i class="fas fa-sign-out-alt"></i> Log Out</div>
+            <div class="menu-item" onclick="handleLogout()" style="color:#d32f2f; margin-bottom:10px;"><i class="fas fa-sign-out-alt"></i> Log Out</div>
+        </div>
+    </div>
+
+    <div class="action-sheet-overlay" onclick="closeSheet()"></div>
+    <div class="action-sheet" id="projectSheet">
+        <div class="sheet-header">
+            <div class="sheet-title" id="sheet-project-name">Project Name</div>
+            <div class="sheet-subtitle">Select an action</div>
+        </div>
+        <div class="sheet-item" onclick="handleSheetAction('edit')">
+            <i class="fas fa-pen"></i> Edit Code
+        </div>
+        <div class="sheet-item" onclick="handleSheetAction('publish')">
+            <i class="fas fa-cloud-upload-alt"></i> Publish
+        </div>
+        <div class="sheet-item" onclick="handleSheetAction('details')">
+            <i class="fas fa-info-circle"></i> Project Details
+        </div>
+        <div style="border-top:1px solid #eee; margin:5px 0;"></div>
+        <div class="sheet-item danger" onclick="handleSheetAction('delete')">
+            <i class="fas fa-trash-alt"></i> Delete Forever
         </div>
     </div>
 
     <header class="app-bar">
         <button class="icon-btn" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
-        <div class="brand-title">Gothwad Studio</div>
+        <div class="brand-container">
+            <div class="brand-title">Gothwad Studio</div>
+            <div class="sync-badge"><div class="status-dot" id="sync-dot"></div> <span id="sync-text">Connecting...</span></div>
+        </div>
         <button class="icon-btn" onclick="toggleSearch()"><i class="fas fa-search"></i></button>
     </header>
 
@@ -157,53 +278,74 @@
 
     <div class="container">
         
-        <div class="section-title">START FROM TEMPLATE</div>
-        
+        <div class="section-title">Start with Template</div>
         <div class="project-card" onclick="useTemplate('portfolio')">
-            <div class="proj-icon" style="color:#2196f3; background:rgba(33,150,243,0.1);"><i class="fas fa-user-circle"></i></div>
-            <div class="proj-info"><div class="proj-name">Portfolio Website</div><div class="proj-date">HTML/CSS Template</div></div>
-            <i class="fas fa-plus" style="color:var(--text-sub); padding:10px;"></i>
+            <div class="proj-icon icon-blue"><i class="fas fa-user-circle"></i></div>
+            <div class="proj-info"><div class="proj-name">Portfolio Website</div><div class="proj-date">HTML/CSS</div></div>
+            <i class="fas fa-plus" style="color:#ccc;"></i>
         </div>
-
         <div class="project-card" onclick="useTemplate('login')">
-            <div class="proj-icon" style="color:#ff9800; background:rgba(255,152,0,0.1);"><i class="fas fa-sign-in-alt"></i></div>
-            <div class="proj-info"><div class="proj-name">Login Page</div><div class="proj-date">Form Logic Template</div></div>
-            <i class="fas fa-plus" style="color:var(--text-sub); padding:10px;"></i>
+            <div class="proj-icon icon-orange"><i class="fas fa-sign-in-alt"></i></div>
+            <div class="proj-info"><div class="proj-name">Login Page</div><div class="proj-date">Forms</div></div>
+            <i class="fas fa-plus" style="color:#ccc;"></i>
         </div>
-
         <div class="project-card" onclick="useTemplate('calc')">
-            <div class="proj-icon" style="color:#e91e63; background:rgba(233,30,99,0.1);"><i class="fas fa-calculator"></i></div>
-            <div class="proj-info"><div class="proj-name">Calculator</div><div class="proj-date">JS Logic Template</div></div>
-            <i class="fas fa-plus" style="color:var(--text-sub); padding:10px;"></i>
+            <div class="proj-icon icon-pink"><i class="fas fa-calculator"></i></div>
+            <div class="proj-info"><div class="proj-name">Calculator</div><div class="proj-date">JavaScript Logic</div></div>
+            <i class="fas fa-plus" style="color:#ccc;"></i>
         </div>
 
-        <div class="section-title">YOUR PROJECTS</div>
-        <div id="project-list">
-            <div class="loading"><i class="fas fa-circle-notch fa-spin"></i> Loading...</div>
-        </div>
+        <div class="section-title">Your Projects</div>
+        
+        <div id="project-list"></div>
+        
+        <div class="loading" id="loader"><i class="fas fa-circle-notch fa-spin"></i> Loading from Cloud...</div>
 
         <div class="empty-state" id="empty-box">
-            <i class="fas fa-cloud-upload-alt empty-icon"></i>
-            <p style="color:var(--text-sub); font-size:14px;">No projects in cloud.<br>Tap (+) to create one.</p>
+            <i class="fas fa-folder-open empty-icon"></i>
+            <p style="color:#999; font-size:14px;">No projects yet.<br>Create one to start coding!</p>
         </div>
     </div>
 
     <nav class="bottom-nav">
-        <a href="#" class="nav-item active"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="home.html" class="nav-item active"><i class="fas fa-home"></i><span>Home</span></a>
         <a href="explore.html" class="nav-item"><i class="fas fa-compass"></i><span>Explore</span></a>
-        <a href="globalchat.html" class="nav-item"><i class="fas fa-users"></i><span>Global</span></a>
-        <a href="chat.html" class="nav-item"><i class="fas fa-comment-dots"></i><span>DM</span></a>
+        <a href="globalchat.html" class="nav-item"><i class="fas fa-globe"></i><span>Global</span></a>
+        <a href="chat.html" class="nav-item"><i class="fas fa-comment"></i><span>DM</span></a>
         <a href="aichat.html" class="nav-item"><i class="fas fa-robot"></i><span>AI</span></a>
     </nav>
 
-    <button class="fab" onclick="goToCreate()"><i class="fas fa-plus"></i></button>
+    <button class="fab" onclick="goToCreate()">
+        <i class="fas fa-plus"></i>
+    </button>
 
     <script type="module">
         import { auth, db, signOut, onAuthStateChanged, collection, query, where, onSnapshot, deleteDoc, doc, addDoc, serverTimestamp } from './firebase-config.js';
 
         let currentUser = null;
+        let selectedProjectId = null; // Store ID for menu actions
+        let selectedProjectName = null;
+
         const list = document.getElementById('project-list');
         const empty = document.getElementById('empty-box');
+        const loader = document.getElementById('loader');
+        const syncText = document.getElementById('sync-text');
+        const syncDot = document.getElementById('sync-dot');
+
+        // --- AUTH & SYNC ---
+        function updateConnStatus() {
+            if(navigator.onLine) {
+                syncText.innerText = "Online";
+                syncDot.classList.add('online');
+            } else {
+                syncText.innerText = "Offline Mode";
+                syncDot.classList.remove('online');
+                syncDot.classList.add('offline');
+            }
+        }
+        window.addEventListener('online', updateConnStatus);
+        window.addEventListener('offline', updateConnStatus);
+        updateConnStatus(); 
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
@@ -211,117 +353,152 @@
                 document.getElementById('user-name').innerText = user.displayName || "Developer";
                 document.getElementById('user-email').innerText = user.email;
                 document.getElementById('user-avatar').innerText = (user.displayName || "U").charAt(0).toUpperCase();
-                loadProjects();
+                loadFromCache(user.uid);
+                initRealtimeSync(user.uid);
             } else {
                 window.location.href = "login.html";
             }
         });
 
-        function loadProjects() {
-            // FIX: Removed 'orderBy' from Firestore query to prevent Index Error.
-            // We fetch simple list first, then sort in JavaScript.
-            const q = query(
-                collection(db, "projects"),
-                where("uid", "==", currentUser.uid)
-            );
+        // --- DATA HANDLING ---
+        function loadFromCache(uid) {
+            const cachedData = localStorage.getItem(`gothwad_projects_${uid}`);
+            if(cachedData) {
+                const projects = JSON.parse(cachedData);
+                renderProjectList(projects);
+                if(projects.length > 0) loader.style.display = 'none';
+            } else {
+                loader.style.display = 'block';
+            }
+        }
+
+        function initRealtimeSync(uid) {
+            syncText.innerText = "Syncing...";
+            const q = query(collection(db, "projects"), where("uid", "==", uid));
 
             onSnapshot(q, (snapshot) => {
-                list.innerHTML = "";
-                if (snapshot.empty) {
-                    empty.style.display = "block";
-                } else {
-                    empty.style.display = "none";
-                    
-                    // 1. Get Data
-                    let projects = [];
-                    snapshot.forEach((doc) => {
-                        projects.push({ id: doc.id, ...doc.data() });
-                    });
+                const projects = [];
+                snapshot.forEach((doc) => {
+                    let data = doc.data();
+                    let dateStr = "Just now";
+                    if(data.createdAt?.toDate) {
+                        dateStr = data.createdAt.toDate().toLocaleDateString();
+                    }
+                    projects.push({ id: doc.id, ...data, formattedDate: dateStr });
+                });
 
-                    // 2. Client-Side Sorting (Newest First)
-                    projects.sort((a, b) => {
-                        let dateA = a.createdAt && typeof a.createdAt.toMillis === 'function' ? a.createdAt.toMillis() : 0;
-                        let dateB = b.createdAt && typeof b.createdAt.toMillis === 'function' ? b.createdAt.toMillis() : 0;
-                        return dateB - dateA;
-                    });
+                projects.sort((a, b) => {
+                    let tA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+                    let tB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+                    return tB - tA;
+                });
 
-                    // 3. Render
-                    projects.forEach(p => renderOneProject(p.id, p));
-                }
+                localStorage.setItem(`gothwad_projects_${uid}`, JSON.stringify(projects));
+                renderProjectList(projects);
+                
+                loader.style.display = 'none';
+                updateConnStatus(); 
+
             }, (error) => {
-                console.error("Error:", error);
-                if(error.code === 'permission-denied') {
-                     list.innerHTML = `<div class="loading" style="color:red">Permission Denied.</div>`;
-                } else {
-                     list.innerHTML = `<div class="loading" style="color:red">Error loading data.</div>`;
-                }
+                syncText.innerText = "Sync Paused";
+                loader.style.display = 'none';
             });
         }
 
-        function renderOneProject(id, data) {
-            let date = "Just now";
-            if(data.createdAt && typeof data.createdAt.toDate === 'function') {
-                date = data.createdAt.toDate().toLocaleDateString();
+        // --- RENDER LIST ---
+        function renderProjectList(projects) {
+            list.innerHTML = "";
+            if (projects.length === 0) {
+                empty.style.display = "block";
+            } else {
+                empty.style.display = "none";
+                projects.forEach(p => {
+                    let div = document.createElement('div');
+                    div.className = 'project-card';
+                    div.dataset.name = (p.name || "").toLowerCase();
+                    
+                    // Click card to open code editor
+                    div.onclick = (e) => {
+                        window.location.href = "filemanager.html?id=" + p.id;
+                    };
+
+                    div.innerHTML = `
+                        <div class="proj-icon"><i class="fas fa-code"></i></div>
+                        <div class="proj-info">
+                            <div class="proj-name">${p.name}</div>
+                            <div class="proj-date">${p.formattedDate || 'Just now'}</div>
+                        </div>
+                        <button class="proj-menu-btn" onclick="openSheet(event, '${p.id}', '${p.name}')">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                    `;
+                    list.appendChild(div);
+                });
             }
-            
-            let div = document.createElement('div');
-            div.className = 'project-card';
-            div.dataset.name = (data.name || "").toLowerCase();
-            div.onclick = () => window.openProject(id);
-            
-            div.innerHTML = `
-                <div class="proj-icon"><i class="fas fa-code"></i></div>
-                <div class="proj-info">
-                    <div class="proj-name">${data.name}</div>
-                    <div class="proj-date">Created: ${date}</div>
-                </div>
-                <button class="proj-menu-btn" onclick="window.deleteProject('${id}', event)">
-                    <i class="fas fa-trash"></i>
-                </button>
-            `;
-            list.appendChild(div);
         }
 
-        window.useTemplate = async function(type) {
-            if(!confirm("Create new project from template?")) return;
+        // --- NEW SHEET/MENU LOGIC ---
+        window.openSheet = (e, id, name) => {
+            e.stopPropagation(); // Stop card click
+            selectedProjectId = id;
+            selectedProjectName = name;
+            document.getElementById('sheet-project-name').innerText = name;
+            document.querySelector('.action-sheet').classList.add('active');
+            document.querySelector('.action-sheet-overlay').classList.add('active');
+        }
+
+        window.closeSheet = () => {
+            document.querySelector('.action-sheet').classList.remove('active');
+            document.querySelector('.action-sheet-overlay').classList.remove('active');
+        }
+
+        window.handleSheetAction = async (action) => {
+            closeSheet(); // Close menu first
             
-            let tplName = "", html = "", css = "", js = "";
-            if(type === 'portfolio') { tplName = "My Portfolio"; html = "<h1>John Doe</h1>"; css = "body{background:#eee;}"; }
-            else if(type === 'login') { tplName = "Login Page"; html = "<input><button>Login</button>"; }
-            else if(type === 'calc') { tplName = "Calculator"; html = "<button>1</button>"; js = "alert('Calc')"; }
+            if (!selectedProjectId) return;
+
+            if (action === 'edit') {
+                window.location.href = "filemanager.html?id=" + selectedProjectId;
+            } 
+            else if (action === 'publish') {
+                alert(`Publishing logic for "${selectedProjectName}" goes here!`);
+            } 
+            else if (action === 'details') {
+                alert(`Project: ${selectedProjectName}\nID: ${selectedProjectId}\n\nMore stats coming soon.`);
+            } 
+            else if (action === 'delete') {
+                // Confirm Delete
+                setTimeout(async () => {
+                   if(confirm(`Are you sure you want to delete "${selectedProjectName}"?`)) {
+                        try { 
+                            await deleteDoc(doc(db, "projects", selectedProjectId)); 
+                        } catch(e) { alert(e.message); }
+                    }
+                }, 100);
+            }
+        }
+
+        // --- TEMPLATES & UTILS ---
+        window.useTemplate = async function(type) {
+            if(!confirm("Create new project?")) return;
+            let tplName="New Project", html="", css="", js="";
+            if(type === 'portfolio') { tplName="Portfolio"; html="<h1>Me</h1>"; css="body{background:#eee}"; }
+            else if(type === 'login') { tplName="Login"; html="<input>"; css="input{padding:5px}"; }
+            else if(type === 'calc') { tplName="Calc"; html="<button>1</button>"; js="alert('Hi')"; }
 
             try {
-                // Creates Document
                 const docRef = await addDoc(collection(db, "projects"), {
-                    name: tplName, html: html, css: css, js: js,
-                    uid: currentUser.uid, createdAt: serverTimestamp()
+                    name: tplName, html, css, js, uid: currentUser.uid, createdAt: serverTimestamp(), extraFiles: []
                 });
-                // Redirects to FileManager
                 window.location.href = "filemanager.html?id=" + docRef.id;
             } catch(e) { alert("Error: " + e.message); }
         }
 
-        window.openProject = function(id) { 
-            // Opens FileManager to edit the project
-            window.location.href = "filemanager.html?id=" + id; 
-        }
-        
-        window.deleteProject = async function(id, event) {
-            event.stopPropagation();
-            if(confirm("Delete from Cloud?")) { await deleteDoc(doc(db, "projects", id)); }
-        }
-        window.toggleMenu = function() { document.querySelector('.sidebar').classList.toggle('active'); document.querySelector('.sidebar-overlay').classList.toggle('active'); }
-        window.toggleSearch = function() {
-            let box = document.getElementById('search-box');
-            if(box.style.display === 'block') { box.style.display = 'none'; document.getElementById('search-input').value = ''; filterProjects(); }
-            else { box.style.display = 'block'; document.getElementById('search-input').focus(); }
-        }
-        window.filterProjects = function() {
-            let q = document.getElementById('search-input').value.toLowerCase();
-            document.querySelectorAll('#project-list .project-card').forEach(c => c.style.display = c.dataset.name.includes(q) ? "flex" : "none");
-        }
-        window.goToCreate = function() { window.location.href = "createproject.html"; }
-        window.handleLogout = async function() { if(confirm("Log out?")) { await signOut(auth); window.location.href = "login.html"; } }
+        window.toggleMenu = () => { document.querySelector('.sidebar').classList.toggle('active'); document.querySelector('.sidebar-overlay').classList.toggle('active'); }
+        window.toggleSearch = () => { let box=document.getElementById('search-box'); let inp=document.getElementById('search-input'); if(box.style.display==='block'){box.style.display='none';inp.value='';filterProjects();}else{box.style.display='block';inp.focus();} }
+        window.filterProjects = () => { let q=document.getElementById('search-input').value.toLowerCase(); document.querySelectorAll('#project-list .project-card').forEach(c => c.style.display=c.dataset.name.includes(q)?"flex":"none"); }
+        window.goToCreate = () => window.location.href = "createproject.html";
+        window.handleLogout = async () => { if(confirm("Log out?")) { await signOut(auth); localStorage.removeItem(`gothwad_projects_${currentUser.uid}`); window.location.href = "login.html"; } }
     </script>
 </body>
 </html>
